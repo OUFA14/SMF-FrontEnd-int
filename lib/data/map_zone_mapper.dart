@@ -26,7 +26,8 @@ class MapZoneMapper {
     };
     final userById = {for (final user in users) user.id: user};
 
-    return zones.asMap().entries.map((entry) {
+
+    return zones.asMap().entries.map<MapZoneViewModel>((entry) {
       final index = entry.key;
       final zone = entry.value;
       final slot = _resolveSlot(zone, index, usedSlots);
@@ -94,6 +95,39 @@ class MapZoneMapper {
     ZoneSummary zone,
     ZoneLayoutSlot base,
   ) {
+    // حقن حدود الـ 10 نقط بتوعك لـ Zone A جوه الـ Slot
+    if (zone.name == 'Zone A') {
+      // أقل وأعلى قيم لـ X و Y حسب نقطك عشان نرسم المستطيل المحيط بيها بالظبط
+      const minX = 0.739;
+      const maxX = 0.880;
+      const minY = 0.024;
+      const maxY = 0.294;
+
+      final footprint = Rect.fromLTRB(minX, minY, maxX, maxY);
+      
+      final workerField = Rect.fromLTWH(
+        footprint.left + footprint.width * 0.15,
+        footprint.top + footprint.height * 0.15,
+        footprint.width * 0.7,
+        footprint.height * 0.7,
+      );
+
+      // السنتر المحسوب لنص المبنى
+      const labelAnchor = Offset(0.821, 0.190);
+
+      return ZoneLayoutSlot(
+        key: base.key,
+        visualType: base.visualType,
+        footprint: footprint,
+        workerField: workerField,
+        labelAnchor: labelAnchor,
+        labelOnLeft: true,
+        elevation: base.elevation,
+        defaultType: base.defaultType,
+        defaultArea: base.defaultArea,
+      );
+    }
+
     if (zone.positionX == null && zone.positionY == null) {
       return base;
     }

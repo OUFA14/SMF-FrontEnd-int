@@ -1,4 +1,7 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+
 
 import '../models/map_worker_marker.dart';
 import 'campus_map_canvas.dart';
@@ -12,7 +15,7 @@ class WorkerMarkerChip extends StatelessWidget {
     super.key,
     required this.worker,
     required this.palette,
-    this.size = 36,
+    this.size = 44,
   });
 
   @override
@@ -24,51 +27,98 @@ class WorkerMarkerChip extends StatelessWidget {
       _ => palette.metricSafe,
     };
 
-    return Container(
+    return SizedBox(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: palette.panelBackground,
-        border: Border.all(color: statusColor, width: 2.4),
-        boxShadow: [
-          BoxShadow(
-            color: statusColor.withValues(alpha: 0.28),
-            blurRadius: 12,
-            spreadRadius: 1,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // Outer glass ring
+          Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: palette.panelBackground.withValues(alpha: 0.35),
+              border: Border.all(
+                color: statusColor.withValues(alpha: 0.95),
+                width: 1.6,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: statusColor.withValues(alpha: 0.18),
+                  blurRadius: 10,
+                  spreadRadius: 0.5,
+                ),
+              ],
+            ),
+          ),
+          // Inner avatar / monogram (slightly smaller)
+          Positioned.fill(
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: ClipOval(
+                child: worker.avatarUrl != null && worker.avatarUrl!.isNotEmpty
+                    ? Image.network(
+                        worker.avatarUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => _MonogramAvatar(
+                          name: worker.name,
+                          color: statusColor,
+                          textColor: palette.textPrimary,
+                          size: size,
+                        ),
+                      )
+                    : _MonogramAvatar(
+                        name: worker.name,
+                        color: statusColor,
+                        textColor: palette.textPrimary,
+                        size: size,
+                      ),
+              ),
+            ),
+          ),
+          // Status dot (SOC-style)
+          Positioned(
+            right: 2,
+            top: 2,
+            child: Container(
+              width: math.max(8, size * 0.18),
+              height: math.max(8, size * 0.18),
+              decoration: BoxDecoration(
+                color: statusColor,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: palette.pageBackground,
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: statusColor.withValues(alpha: 0.35),
+                    blurRadius: 10,
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
-      ),
-      child: ClipOval(
-        child: worker.avatarUrl != null && worker.avatarUrl!.isNotEmpty
-            ? Image.network(
-                worker.avatarUrl!,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _InitialsAvatar(
-                  name: worker.name,
-                  color: statusColor,
-                  textColor: palette.textPrimary,
-                ),
-              )
-            : _InitialsAvatar(
-                name: worker.name,
-                color: statusColor,
-                textColor: palette.textPrimary,
-              ),
       ),
     );
   }
 }
 
-class _InitialsAvatar extends StatelessWidget {
+class _MonogramAvatar extends StatelessWidget {
   final String name;
   final Color color;
   final Color textColor;
+  final double size;
 
-  const _InitialsAvatar({
+
+  const _MonogramAvatar({
     required this.name,
     required this.color,
     required this.textColor,
+    required this.size,
   });
 
   @override

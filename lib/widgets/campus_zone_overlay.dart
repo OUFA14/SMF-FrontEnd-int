@@ -29,12 +29,14 @@ class CampusZoneOverlay extends StatelessWidget {
         builder: (context, constraints) {
           final width = constraints.maxWidth;
           final height = constraints.maxHeight;
+
           final footprint = Rect.fromLTWH(
             slot.footprint.left * width,
             slot.footprint.top * height,
             slot.footprint.width * width,
             slot.footprint.height * height,
           );
+
           final labelPosition = Offset(
             slot.labelAnchor.dx * width,
             slot.labelAnchor.dy * height,
@@ -45,22 +47,19 @@ class CampusZoneOverlay extends StatelessWidget {
             children: [
               Positioned(
                 left: footprint.left,
-                top: footprint.top - footprint.height * slot.elevation * 0.9,
+                top: footprint.top,
                 width: footprint.width,
-                height: footprint.height * (1 + slot.elevation * 1.2),
+                height: footprint.height,
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: onTap,
-                    borderRadius: BorderRadius.circular(22),
+                    borderRadius: BorderRadius.circular(18),
                     child: Stack(
                       clipBehavior: Clip.none,
                       children: [
                         CustomPaint(
-                          size: Size(
-                            footprint.width,
-                            footprint.height * (1 + slot.elevation * 1.2),
-                          ),
+                          size: Size(footprint.width, footprint.height),
                           painter: _ZonePainter(
                             zone: zone,
                             palette: palette,
@@ -69,18 +68,14 @@ class CampusZoneOverlay extends StatelessWidget {
                         ),
                         ...zone.workers.take(12).map((worker) {
                           return Positioned(
-                            left:
-                                (worker.offsetDx - slot.footprint.left) * width,
-                            top: (worker.offsetDy - slot.footprint.top) *
-                                    height -
-                                footprint.height * slot.elevation * 0.55,
+                            left: (worker.offsetDx - slot.footprint.left) * width,
+                            top: (worker.offsetDy - slot.footprint.top) * height,
                             child: WorkerMarkerChip(
                               worker: worker,
                               palette: palette,
-                              size: math.max(
-                                20,
-                                math.min(36, footprint.width * 0.12),
-                              ),
+                              size: worker.id == zone.workers.firstOrNull?.id
+                                  ? 22
+                                  : 16,
                             ),
                           );
                         }),
@@ -109,6 +104,7 @@ class CampusZoneOverlay extends StatelessWidget {
     );
   }
 }
+
 
 class _ZoneLabelCard extends StatelessWidget {
   final MapZoneViewModel zone;
@@ -249,261 +245,64 @@ class _ZonePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    switch (zone.layoutSlot.visualType) {
-      case ZoneVisualType.court:
-        _paintCourt(canvas, size);
-        break;
-      case ZoneVisualType.gate:
-        _paintGate(canvas, size);
-        break;
-      case ZoneVisualType.restricted:
-        _paintRestricted(canvas, size);
-        break;
-      case ZoneVisualType.assembly:
-        _paintAssembly(canvas, size);
-        break;
-      case ZoneVisualType.utility:
-        _paintUtility(canvas, size);
-        break;
-      case ZoneVisualType.generic:
-        _paintGeneric(canvas, size);
-        break;
-      case ZoneVisualType.building:
-        _paintBuilding(canvas, size);
-        break;
-    }
-  }
-
-  void _paintBuilding(Canvas canvas, Size size) {
-    final top = size.height * 0.22;
-    final roof = Path()
-      ..moveTo(size.width * 0.16, top + size.height * 0.14)
-      ..lineTo(size.width * 0.48, top)
-      ..lineTo(size.width * 0.85, top + size.height * 0.14)
-      ..lineTo(size.width * 0.54, top + size.height * 0.28)
-      ..close();
-    final leftWall = Path()
-      ..moveTo(size.width * 0.16, top + size.height * 0.14)
-      ..lineTo(size.width * 0.54, top + size.height * 0.28)
-      ..lineTo(size.width * 0.54, size.height * 0.92)
-      ..lineTo(size.width * 0.16, size.height * 0.75)
-      ..close();
-    final rightWall = Path()
-      ..moveTo(size.width * 0.54, top + size.height * 0.28)
-      ..lineTo(size.width * 0.85, top + size.height * 0.14)
-      ..lineTo(size.width * 0.85, size.height * 0.59)
-      ..lineTo(size.width * 0.54, size.height * 0.92)
-      ..close();
-
-    final glowPaint = Paint()
-      ..color = zone.statusColor.withValues(alpha: selected ? 0.20 : 0.12)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
-    canvas.drawPath(roof.shift(const Offset(0, 0)), glowPaint);
-
-    canvas.drawPath(
-      roof,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            palette.buildingRoof,
-            palette.buildingRoof.withValues(alpha: 0.75),
-          ],
-        ).createShader(Offset.zero & size),
-    );
-    canvas.drawPath(leftWall, Paint()..color = palette.buildingWall);
-    canvas.drawPath(
-      rightWall,
-      Paint()..color = palette.buildingWall.withValues(alpha: 0.88),
-    );
-
-    final outline = Paint()
-      ..color = zone.statusColor.withValues(alpha: 0.82)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = selected ? 2.4 : 1.6;
-    canvas.drawPath(roof, outline);
-    canvas.drawPath(leftWall, outline);
-    canvas.drawPath(rightWall, outline);
-
-    final windowPaint = Paint()
-      ..color = palette.buildingAccent.withValues(alpha: 0.72)
-      ..style = PaintingStyle.fill;
-    for (var row = 0; row < 3; row++) {
-      for (var col = 0; col < 4; col++) {
-        final dx = size.width * (0.23 + col * 0.07);
-        final dy = size.height * (0.42 + row * 0.12);
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(
-            Rect.fromLTWH(dx, dy, size.width * 0.034, size.height * 0.07),
-            const Radius.circular(2),
-          ),
-          windowPaint,
-        );
-      }
-    }
-  }
-
-  void _paintCourt(Canvas canvas, Size size) {
-    final court = Path()
-      ..moveTo(size.width * 0.12, size.height * 0.26)
-      ..lineTo(size.width * 0.50, size.height * 0.08)
-      ..lineTo(size.width * 0.90, size.height * 0.28)
-      ..lineTo(size.width * 0.52, size.height * 0.48)
-      ..close();
+    // Flat 2D zone rendering (no isometric/3D geometry).
+    final rect = Offset.zero & size;
+    final rrect = RRect.fromRectAndRadius(rect, Radius.circular(18));
 
     final fill = Paint()
-      ..color = zone.statusColor.withValues(alpha: 0.42)
+      ..color = zone.statusColor.withValues(alpha: selected ? 0.22 : 0.10)
       ..style = PaintingStyle.fill;
-    canvas.drawPath(court, fill);
-    canvas.drawPath(
-      court,
-      Paint()
-        ..color = zone.statusColor
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = selected ? 2.2 : 1.6,
-    );
+    canvas.drawRRect(rrect, fill);
 
-    final line = Paint()
-      ..color = Colors.white.withValues(alpha: 0.65)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
-    canvas.drawLine(
-      Offset(size.width * 0.30, size.height * 0.18),
-      Offset(size.width * 0.70, size.height * 0.36),
-      line,
-    );
-    canvas.drawLine(
-      Offset(size.width * 0.26, size.height * 0.34),
-      Offset(size.width * 0.66, size.height * 0.14),
-      line,
-    );
-    canvas.drawCircle(
-      Offset(size.width * 0.50, size.height * 0.27),
-      size.width * 0.08,
-      line,
-    );
-  }
-
-  void _paintGate(Canvas canvas, Size size) {
-    final gate = RRect.fromRectAndRadius(
-      Rect.fromLTWH(size.width * 0.14, size.height * 0.32, size.width * 0.72,
-          size.height * 0.34),
-      const Radius.circular(18),
-    );
-    canvas.drawRRect(
-      gate,
-      Paint()..color = palette.buildingWall.withValues(alpha: 0.92),
-    );
-    final road = Paint()
-      ..color = palette.campusRoad.withValues(alpha: 0.86)
-      ..style = PaintingStyle.fill;
-    canvas.drawRect(
-      Rect.fromLTWH(size.width * 0.38, size.height * 0.40, size.width * 0.24,
-          size.height * 0.34),
-      road,
-    );
-    final outline = Paint()
-      ..color = zone.statusColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = selected ? 2.4 : 1.6;
-    canvas.drawRRect(gate, outline);
-  }
-
-  void _paintRestricted(Canvas canvas, Size size) {
-    final pad = RRect.fromRectAndRadius(
-      Rect.fromLTWH(
-        size.width * 0.10,
-        size.height * 0.18,
-        size.width * 0.80,
-        size.height * 0.62,
-      ),
-      const Radius.circular(16),
-    );
-    canvas.drawRRect(
-      pad,
-      Paint()..color = zone.statusColor.withValues(alpha: 0.16),
-    );
-    canvas.drawRRect(
-      pad,
-      Paint()
-        ..color = zone.statusColor
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = selected ? 2.2 : 1.8,
-    );
-    final iconPainter = TextPainter(
-      text: TextSpan(
-        text: '🔒',
-        style: TextStyle(fontSize: size.height * 0.22),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    iconPainter.paint(
-      canvas,
-      Offset(size.width * 0.42, size.height * 0.34),
-    );
-  }
-
-  void _paintAssembly(Canvas canvas, Size size) {
-    final center = Offset(size.width * 0.50, size.height * 0.52);
-    final circle = Paint()
-      ..color = zone.statusColor.withValues(alpha: 0.18)
-      ..style = PaintingStyle.fill;
     final stroke = Paint()
-      ..color = zone.statusColor
+      ..color = zone.statusColor.withValues(alpha: selected ? 0.95 : 0.65)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = selected ? 2.4 : 1.6;
-    canvas.drawCircle(center, size.width * 0.26, circle);
-    canvas.drawCircle(center, size.width * 0.34, stroke);
-    canvas.drawCircle(
-      center,
-      size.width * 0.44,
-      stroke..color = zone.statusColor.withValues(alpha: 0.42),
-    );
-    final iconPainter = TextPainter(
-      text: TextSpan(
-        text: '👥',
-        style: TextStyle(fontSize: size.height * 0.28),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    iconPainter.paint(
-      canvas,
-      Offset(size.width * 0.37, size.height * 0.36),
-    );
-  }
+      ..strokeWidth = selected ? 2.6 : 1.6;
+    canvas.drawRRect(rrect, stroke);
 
-  void _paintUtility(Canvas canvas, Size size) {
-    _paintGeneric(canvas, size);
-    final spark = Paint()
-      ..color = palette.accentBlue
-      ..strokeWidth = 2.2
-      ..style = PaintingStyle.stroke;
-    final path = Path()
-      ..moveTo(size.width * 0.42, size.height * 0.30)
-      ..lineTo(size.width * 0.52, size.height * 0.45)
-      ..lineTo(size.width * 0.47, size.height * 0.45)
-      ..lineTo(size.width * 0.57, size.height * 0.64);
-    canvas.drawPath(path, spark);
-  }
+    // Minimal interior marker based on visual type.
+    final iconPaint = Paint()
+      ..color = palette.accentBlue.withValues(alpha: selected ? 0.95 : 0.70)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
 
-  void _paintGeneric(Canvas canvas, Size size) {
-    final building = RRect.fromRectAndRadius(
-      Rect.fromLTWH(size.width * 0.16, size.height * 0.18, size.width * 0.68,
-          size.height * 0.52),
-      const Radius.circular(16),
-    );
-    canvas.drawRRect(
-      building,
-      Paint()..color = palette.buildingWall.withValues(alpha: 0.94),
-    );
-    canvas.drawRRect(
-      building,
-      Paint()
-        ..color = zone.statusColor
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = selected ? 2.2 : 1.6,
-    );
+    switch (zone.layoutSlot.visualType) {
+      case ZoneVisualType.court:
+        canvas.drawLine(Offset(size.width * 0.25, size.height * 0.35),
+            Offset(size.width * 0.75, size.height * 0.65), iconPaint);
+        break;
+      case ZoneVisualType.gate:
+        canvas.drawRect(
+          Rect.fromLTWH(size.width * 0.3, size.height * 0.38,
+              size.width * 0.4, size.height * 0.24),
+          iconPaint,
+        );
+        break;
+      case ZoneVisualType.restricted:
+        canvas.drawCircle(Offset(size.width * 0.5, size.height * 0.5),
+            size.width * 0.12, iconPaint);
+        break;
+      case ZoneVisualType.assembly:
+        canvas.drawCircle(Offset(size.width * 0.5, size.height * 0.5),
+            size.width * 0.16, iconPaint);
+        break;
+      case ZoneVisualType.utility:
+        final p = Path()
+          ..moveTo(size.width * 0.45, size.height * 0.45)
+          ..lineTo(size.width * 0.55, size.height * 0.55)
+          ..lineTo(size.width * 0.48, size.height * 0.55)
+          ..lineTo(size.width * 0.55, size.height * 0.68);
+        canvas.drawPath(p, iconPaint);
+        break;
+      case ZoneVisualType.generic:
+      case ZoneVisualType.building:
+        // default interior: two diagonals.
+        canvas.drawLine(Offset(size.width * 0.25, size.height * 0.25),
+            Offset(size.width * 0.75, size.height * 0.75), iconPaint);
+        canvas.drawLine(Offset(size.width * 0.75, size.height * 0.25),
+            Offset(size.width * 0.25, size.height * 0.75), iconPaint);
+        break;
+    }
   }
 
   @override
@@ -513,3 +312,4 @@ class _ZonePainter extends CustomPainter {
         oldDelegate.selected != selected;
   }
 }
+

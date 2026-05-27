@@ -601,7 +601,7 @@ class _MapOverviewPageState extends State<MapOverviewPage> {
   }
 }
 
-class _SingleZoneBuildingMonitor extends StatelessWidget {
+class _SingleZoneBuildingMonitor extends StatefulWidget {
   final CampusMapPalette palette;
   final MapZoneViewModel zone;
   final List<MapZoneViewModel> zones;
@@ -627,6 +627,55 @@ class _SingleZoneBuildingMonitor extends StatelessWidget {
   });
 
   @override
+  State<_SingleZoneBuildingMonitor> createState() =>
+      _SingleZoneBuildingMonitorState();
+}
+
+class _SingleZoneBuildingMonitorState
+    extends State<_SingleZoneBuildingMonitor> {
+  final TransformationController _transformationController =
+      TransformationController();
+  Offset? _debugTapOffset;
+
+  @override
+  void dispose() {
+    _transformationController.dispose();
+    super.dispose();
+  }
+
+  void _zoomToScale(double targetScale, Size size) {
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+    final translation = Matrix4.translationValues(cx, cy, 0.0);
+    final scaling = Matrix4.diagonal3Values(targetScale, targetScale, 1.0);
+    final translationInv = Matrix4.translationValues(-cx, -cy, 0.0);
+    final matrix = translation * scaling * translationInv;
+    setState(() {
+      _transformationController.value = matrix;
+    });
+  }
+
+  void _zoomIn(Size size) {
+    final scale = _transformationController.value.getMaxScaleOnAxis();
+    if (scale < 5.0) {
+      _zoomToScale((scale + 0.5).clamp(1.0, 5.0), size);
+    }
+  }
+
+  void _zoomOut(Size size) {
+    final scale = _transformationController.value.getMaxScaleOnAxis();
+    if (scale > 1.0) {
+      _zoomToScale((scale - 0.5).clamp(1.0, 5.0), size);
+    }
+  }
+
+  void _resetZoom() {
+    setState(() {
+      _transformationController.value = Matrix4.identity();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return AspectRatio(
@@ -638,15 +687,16 @@ class _SingleZoneBuildingMonitor extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              palette.panelBackground,
-              palette.pageBackground,
+              widget.palette.panelBackground,
+              widget.palette.pageBackground,
               isDark ? const Color(0xFF06111F) : const Color(0xFFEAF4FF),
             ],
           ),
-          border: Border.all(color: zone.statusColor.withValues(alpha: 0.26)),
+          border: Border.all(
+              color: widget.zone.statusColor.withValues(alpha: 0.26)),
           boxShadow: [
             BoxShadow(
-              color: zone.statusColor.withValues(alpha: 0.10),
+              color: widget.zone.statusColor.withValues(alpha: 0.10),
               blurRadius: 34,
               offset: const Offset(0, 18),
             ),
@@ -655,117 +705,229 @@ class _SingleZoneBuildingMonitor extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: LayoutBuilder(
           builder: (context, constraints) {
+            final size = Size(constraints.maxWidth, constraints.maxHeight);
             final isCompact = constraints.maxWidth < 720;
-            final displayWorkers = workers.isNotEmpty
-                ? workers.take(isCompact ? 4 : 6).toList()
-                : _fallbackWorkers(context, zone);
+            final displayWorkers = widget.workers.isNotEmpty
+                ? widget.workers.take(isCompact ? 4 : 6).toList()
+                : _fallbackWorkers(context, widget.zone);
             final selectedZoneIndex = math.max(
               0,
-              zones.indexWhere((item) => item.id == zone.id),
+              widget.zones.indexWhere((item) => item.id == widget.zone.id),
             );
+
             return Stack(
               children: [
                 Positioned.fill(
-                  child: ColorFiltered(
-                    colorFilter: isDark
-                        ? const ColorFilter.mode(
-                            Colors.transparent,
-                            BlendMode.dst,
-                          )
-                        : const ColorFilter.matrix([
-                            1.18,
-                            0,
-                            0,
-                            0,
-                            18,
-                            0,
-                            1.18,
-                            0,
-                            0,
-                            18,
-                            0,
-                            0,
-                            1.18,
-                            0,
-                            20,
-                            0,
-                            0,
-                            0,
-                            1,
-                            0,
-                          ]),
-child: Image.asset(
-                      'assets/images/uni_design.png',
-                      fit: BoxFit.cover,
-                      alignment: Alignment.center,
-                      filterQuality: FilterQuality.high,
-                    ),
-                  ),
-                ),
-                Positioned.fill(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: isDark
-                          ? RadialGradient(
-                              center: const Alignment(0.08, -0.08),
-                              radius: 0.92,
-                              colors: [
-                                Colors.transparent,
-                                palette.pageBackground.withValues(alpha: 0.18),
-                              ],
-                            )
-                          : LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.white.withValues(alpha: 0.18),
-                                palette.pageBackground.withValues(alpha: 0.30),
-                              ],
+                  child: InteractiveViewer(
+                    transformationController: _transformationController,
+                    minScale: 1.0,
+                    maxScale: 5.0,
+                    clipBehavior: Clip.none,
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: ColorFiltered(
+                            colorFilter: isDark
+                                ? const ColorFilter.mode(
+                                    Colors.transparent,
+                                    BlendMode.dst,
+                                  )
+                                : const ColorFilter.matrix([
+                                    1.18,
+                                    0,
+                                    0,
+                                    0,
+                                    18,
+                                    0,
+                                    1.18,
+                                    0,
+                                    0,
+                                    18,
+                                    0,
+                                    0,
+                                    1.18,
+                                    0,
+                                    20,
+                                    0,
+                                    0,
+                                    0,
+                                    1,
+                                    0,
+                                  ]),
+                            child: Image.asset(
+                              'assets/images/uni_design.png',
+                              fit: BoxFit.cover,
+                              alignment: Alignment.center,
+                              filterQuality: FilterQuality.high,
                             ),
+                          ),
+                        ),
+                        Positioned.fill(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: isDark
+                                  ? RadialGradient(
+                                      center: const Alignment(0.08, -0.08),
+                                      radius: 0.92,
+                                      colors: [
+                                        Colors.transparent,
+                                        widget.palette.pageBackground
+                                            .withValues(alpha: 0.18),
+                                      ],
+                                    )
+                                  : LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Colors.white.withValues(alpha: 0.18),
+                                        widget.palette.pageBackground
+                                            .withValues(alpha: 0.30),
+                                      ],
+                                    ),
+                            ),
+                          ),
+                        ),
+                        Positioned.fill(
+                          child: _ReferenceZoneLayer(
+                            palette: widget.palette,
+                            zones: widget.zones,
+                            selectedZoneId: widget.selectedZoneId,
+                            onSelectZone: widget.onSelectZone,
+                            onCoordinateClick: (offset) {
+                              setState(() {
+                                _debugTapOffset = offset;
+                              });
+                              debugPrint('MAP_TAP: Offset(${offset.dx.toStringAsFixed(3)}, ${offset.dy.toStringAsFixed(3)}),');
+                            },
+                          ),
+                        ),
+                        Positioned.fill(
+                          child: Stack(
+                            children: [
+                              for (var i = 0; i < displayWorkers.length; i++)
+                                _ReferenceWorkerMarker(
+                                  palette: widget.palette,
+                                  worker: displayWorkers[i],
+                                  index: i,
+                                  zoneIndex: selectedZoneIndex,
+                                  totalWorkers: displayWorkers.length,
+                                  selected: displayWorkers[i].id ==
+                                      widget.selectedWorkerId,
+                                  onTap: () =>
+                                      widget.onSelectWorker(displayWorkers[i]),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-                Positioned.fill(
-                  child: _ReferenceZoneLayer(
-                    palette: palette,
-                    zones: zones,
-                    selectedZoneId: selectedZoneId,
-                    onSelectZone: onSelectZone,
+                // Coordinates Tooltip overlay
+                if (_debugTapOffset != null)
+                  Positioned(
+                    left: isCompact ? 18 : 24,
+                    top: isCompact ? 104 + 68 : 24,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: widget.palette.panelBackground.withValues(alpha: 0.95),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: widget.palette.panelBorder),
+                        boxShadow: [
+                          BoxShadow(
+                            color: widget.palette.panelShadow.withValues(alpha: 0.15),
+                            blurRadius: 12,
+                          ),
+                        ],
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.ads_click, color: widget.palette.metricSafe, size: 14),
+                          const SizedBox(width: 8),
+                          SelectableText(
+                            'Offset(${_debugTapOffset!.dx.toStringAsFixed(3)}, ${_debugTapOffset!.dy.toStringAsFixed(3)})',
+                            style: TextStyle(
+                              color: widget.palette.textPrimary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'monospace',
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _debugTapOffset = null;
+                              });
+                            },
+                            child: Icon(Icons.close, color: widget.palette.textSecondary, size: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                // Zoom Controls overlay
+                Positioned(
+                  right: isCompact ? 18 : 24,
+                  top: isCompact ? 18 : 24,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: widget.palette.panelBackground.withValues(alpha: 0.65),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: widget.palette.panelBorder.withValues(alpha: 0.5),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: widget.palette.panelShadow.withValues(alpha: 0.1),
+                          blurRadius: 10,
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _ZoomButton(
+                          icon: Icons.add,
+                          onPressed: () => _zoomIn(size),
+                          palette: widget.palette,
+                        ),
+                        const SizedBox(height: 4),
+                        _ZoomButton(
+                          icon: Icons.remove,
+                          onPressed: () => _zoomOut(size),
+                          palette: widget.palette,
+                        ),
+                        const SizedBox(height: 4),
+                        _ZoomButton(
+                          icon: Icons.zoom_out_map_outlined,
+                          onPressed: _resetZoom,
+                          palette: widget.palette,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 Positioned(
                   left: isCompact ? 18 : 24,
                   top: isCompact ? 18 : constraints.maxHeight * 0.30,
                   child: _BuildingInfoCallout(
-                    palette: palette,
-                    zone: zone,
-                    workersCount: workers.isNotEmpty
-                        ? workers.length
-                        : math.max(zone.workersCount, displayWorkers.length),
+                    palette: widget.palette,
+                    zone: widget.zone,
+                    workersCount: widget.workers.isNotEmpty
+                        ? widget.workers.length
+                        : math.max(widget.zone.workersCount, displayWorkers.length),
                   ),
                 ),
                 Positioned(
                   right: isCompact ? 18 : 26,
                   top: isCompact ? 104 : constraints.maxHeight * 0.34,
                   child: _BuildingStatusCallout(
-                    palette: palette,
-                    zone: zone,
-                  ),
-                ),
-                Positioned.fill(
-                  child: Stack(
-                    children: [
-                      for (var i = 0; i < displayWorkers.length; i++)
-                        _ReferenceWorkerMarker(
-                          palette: palette,
-                          worker: displayWorkers[i],
-                          index: i,
-                          zoneIndex: selectedZoneIndex,
-                          totalWorkers: displayWorkers.length,
-                          selected: displayWorkers[i].id == selectedWorkerId,
-                          onTap: () => onSelectWorker(displayWorkers[i]),
-                        ),
-                    ],
+                    palette: widget.palette,
+                    zone: widget.zone,
                   ),
                 ),
                 Positioned(
@@ -773,18 +935,18 @@ child: Image.asset(
                   right: 18,
                   bottom: 18,
                   child: _SingleZoneLegend(
-                    palette: palette,
-                    safe: workers
+                    palette: widget.palette,
+                    safe: widget.workers
                         .where((item) => item.status.toLowerCase() == 'safe')
                         .length,
-                    warning: workers
+                    warning: widget.workers
                         .where((item) => item.status.toLowerCase() == 'warning')
                         .length,
-                    emergency: workers
+                    emergency: widget.workers
                         .where(
                             (item) => item.status.toLowerCase() == 'emergency')
                         .length,
-                    offline: workers.isEmpty ? deviceCount : 0,
+                    offline: widget.workers.isEmpty ? widget.deviceCount : 0,
                   ),
                 ),
               ],
@@ -812,6 +974,37 @@ child: Image.asset(
         offsetDy: 0,
       );
     });
+  }
+}
+
+class _ZoomButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onPressed;
+  final CampusMapPalette palette;
+
+  const _ZoomButton({
+    required this.icon,
+    required this.onPressed,
+    required this.palette,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(
+        color: palette.panelBackground.withValues(alpha: 0.8),
+        shape: BoxShape.circle,
+        border: Border.all(color: palette.panelBorder.withValues(alpha: 0.8)),
+      ),
+      child: IconButton(
+        padding: EdgeInsets.zero,
+        iconSize: 16,
+        icon: Icon(icon, color: palette.textPrimary),
+        onPressed: onPressed,
+      ),
+    );
   }
 }
 
@@ -959,12 +1152,14 @@ class _ReferenceZoneLayer extends StatelessWidget {
   final List<MapZoneViewModel> zones;
   final String? selectedZoneId;
   final ValueChanged<MapZoneViewModel> onSelectZone;
+  final void Function(Offset)? onCoordinateClick;
 
   const _ReferenceZoneLayer({
     required this.palette,
     required this.zones,
     required this.selectedZoneId,
     required this.onSelectZone,
+    this.onCoordinateClick,
   });
 
   @override
@@ -977,7 +1172,12 @@ class _ReferenceZoneLayer extends StatelessWidget {
           child: GestureDetector(
             behavior: HitTestBehavior.translucent,
             onTapDown: (details) {
-              final zone = _zoneAt(details.localPosition, size);
+              final localPos = details.localPosition;
+              final dx = localPos.dx / size.width;
+              final dy = localPos.dy / size.height;
+              onCoordinateClick?.call(Offset(dx, dy));
+
+              final zone = _zoneAt(localPos, size);
               if (zone != null) {
                 onSelectZone(zone);
               }
@@ -1140,54 +1340,70 @@ Offset _workerPointInZone({
   required int workerIndex,
   required int totalWorkers,
 }) {
-  final points = _zonePoints[zoneIndex % _zonePoints.length];
-  final topLeft = points[0];
-  final topRight = points[1];
-  final bottomRight = points[2];
-  final bottomLeft = points[3];
-  const anchors = [
-    Offset(0.50, 0.48),
-    Offset(0.32, 0.36),
-    Offset(0.68, 0.38),
-    Offset(0.40, 0.66),
-    Offset(0.62, 0.66),
-    Offset(0.50, 0.28),
+  final center = _zoneCenters[zoneIndex % _zoneCenters.length];
+  if (totalWorkers == 1) {
+    return center;
+  }
+  // Distribute workers cleanly around the center in a small cluster
+  const offsets = [
+    Offset(0.0, 0.0),
+    Offset(-0.02, -0.015),
+    Offset(0.02, 0.015),
+    Offset(-0.02, 0.015),
+    Offset(0.02, -0.015),
+    Offset(0.0, -0.025),
+    Offset(0.0, 0.025),
   ];
-  final anchor = anchors[workerIndex % anchors.length];
-  final u = totalWorkers == 1
-      ? 0.50
-      : (anchor.dx + (workerIndex * 0.03)).clamp(0.26, 0.74).toDouble();
-  final v = (anchor.dy + (workerIndex * 0.02)).clamp(0.24, 0.72).toDouble();
-  final top = Offset.lerp(topLeft, topRight, u)!;
-  final bottom = Offset.lerp(bottomLeft, bottomRight, u)!;
-  return Offset.lerp(top, bottom, v)!;
+  final offset = offsets[workerIndex % offsets.length];
+  return Offset(center.dx + offset.dx, center.dy + offset.dy);
 }
 
 const _zonePoints = [
+  // Zone A (Blue) - User calibrated high-precision multi-point boundary
   [
-    Offset(0.06, 0.12),
-    Offset(0.36, 0.12),
-    Offset(0.36, 0.86),
-    Offset(0.06, 0.86),
+    Offset(0.804, 0.025),
+    Offset(0.880, 0.149),
+    Offset(0.863, 0.191),
+    Offset(0.874, 0.209),
+    Offset(0.836, 0.280),
+    Offset(0.822, 0.260),
+    Offset(0.800, 0.294),
+    Offset(0.786, 0.277),
+    Offset(0.773, 0.292),
+    Offset(0.739, 0.140),
   ],
+  // Zone B (Green) - User calibrated high-precision multi-point boundary
   [
-    Offset(0.36, 0.12),
-    Offset(0.66, 0.12),
-    Offset(0.66, 0.86),
-    Offset(0.36, 0.86),
+    Offset(0.650, 0.189),
+    Offset(0.737, 0.147),
+    Offset(0.771, 0.293),
+    Offset(0.783, 0.292),
+    Offset(0.771, 0.336),
+    Offset(0.690, 0.380),
+    Offset(0.692, 0.369),
+    Offset(0.686, 0.341),
+    Offset(0.697, 0.332),
+    Offset(0.686, 0.287),
+    Offset(0.670, 0.292),
   ],
+  // Zone C (Yellow) - High-precision multi-point boundary
   [
-    Offset(0.66, 0.12),
-    Offset(0.96, 0.12),
-    Offset(0.96, 0.86),
-    Offset(0.66, 0.86),
+    Offset(0.575, 0.19),
+    Offset(0.64, 0.16),
+    Offset(0.61, 0.27),
+    Offset(0.63, 0.28),
+    Offset(0.645, 0.355),
+    Offset(0.68, 0.38),
+    Offset(0.61, 0.42),
+    Offset(0.58, 0.32),
+    Offset(0.55, 0.22),
   ],
 ];
 
 const _zoneCenters = [
-  Offset(0.21, 0.49),
-  Offset(0.51, 0.49),
-  Offset(0.81, 0.49),
+  Offset(0.81, 0.16), // Zone A
+  Offset(0.71, 0.26), // Zone B
+  Offset(0.60, 0.30), // Zone C
 ];
 
 class _ReferenceWorkerMarker extends StatelessWidget {
@@ -1232,19 +1448,19 @@ class _ReferenceWorkerMarker extends StatelessWidget {
                 WorkerMarkerChip(
                   worker: worker,
                   palette: palette,
-                  size: selected ? 66 : 58,
+                  size: selected ? 38 : 30,
                 ),
                 Positioned(
-                  right: 2,
+                  right: 1,
                   bottom: 1,
                   child: Container(
-                    width: 13,
-                    height: 13,
+                    width: selected ? 10 : 8,
+                    height: selected ? 10 : 8,
                     decoration: BoxDecoration(
                       color: _workerColor(worker.status),
                       shape: BoxShape.circle,
                       border:
-                          Border.all(color: palette.pageBackground, width: 2),
+                          Border.all(color: palette.pageBackground, width: 1.5),
                     ),
                   ),
                 ),
