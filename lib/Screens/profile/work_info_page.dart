@@ -191,7 +191,6 @@ class _WorkInfoPageState extends State<WorkInfoPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── Employee Data ──────────────────────────────────────────
                 _sectionHeader(
                   isDark,
                   icon: Icons.work_outline,
@@ -223,7 +222,6 @@ class _WorkInfoPageState extends State<WorkInfoPage> {
 
                 const SizedBox(height: 24),
 
-                // ── Qualifications ─────────────────────────────────────────
                 _sectionHeader(
                   isDark,
                   icon: Icons.school_outlined,
@@ -256,7 +254,6 @@ class _WorkInfoPageState extends State<WorkInfoPage> {
 
                 const SizedBox(height: 24),
 
-                // ── Status ─────────────────────────────────────────────────
                 _sectionHeader(
                   isDark,
                   icon: Icons.toggle_on_outlined,
@@ -325,8 +322,6 @@ class _WorkInfoPageState extends State<WorkInfoPage> {
       ),
     );
   }
-
-  // ── Helpers ───────────────────────────────────────────────────────────────
 
   Widget _sectionHeader(bool isDark,
       {required IconData icon,
