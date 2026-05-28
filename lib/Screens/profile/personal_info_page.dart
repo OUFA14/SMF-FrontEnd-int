@@ -10,7 +10,7 @@ import '../../services/users_service.dart';
 
 class PersonalInfoPage extends StatefulWidget {
   const PersonalInfoPage({super.key});
-  bool _isLoading = true;
+  
 
   @override
   State<PersonalInfoPage> createState() => _PersonalInfoPageState();
@@ -19,6 +19,7 @@ class PersonalInfoPage extends StatefulWidget {
 class _PersonalInfoPageState extends State<PersonalInfoPage> {
   bool _isEditing = false;
   final UsersService _usersService = UsersService();
+  bool _isLoading = true;
 
   // ── Basic Details ────────────────────────────────────────────────────────
   final _fullNameCtrl = TextEditingController(text: "Admin User");
