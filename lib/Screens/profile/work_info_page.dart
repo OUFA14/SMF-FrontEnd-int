@@ -154,8 +154,10 @@ class _WorkInfoPageState extends State<WorkInfoPage> {
                 child: TextButton.icon(
                   onPressed: _toggleEdit,
                   icon: Icon(_isEditing ? Icons.check : Icons.edit_outlined, size: 18, color: _isEditing ? Colors.green : Colors.blueAccent),
-                  label: Text(_isEditing ? (lang.isArabic ? "حفظ" : "Save") : (lang.isArabic ? "تعديل" : "Edit"),
-                  style: TextStyle(color: _isEditing ? Colors.green : Colors.blueAccent, fontWeight: FontWeight.w600),
+                  label: Text(
+                    _isEditing ? (lang.isArabic ? "حفظ" : "Save") : (lang.isArabic ? "تعديل" : "Edit"),
+                    style: TextStyle(color: _isEditing ? Colors.green : Colors.blueAccent, fontWeight: FontWeight.w600),
+                  ),
                 ),
               ),
             ],
@@ -264,7 +266,15 @@ class _WorkInfoPageState extends State<WorkInfoPage> {
     );
   }
 
-  Widget _dropdownRow(bool isDark, {required String label, required IconData icon, required String value, required List<String> options, required Map<String, Color> chipColors, required ValueChanged<String?> onChanged}) {
+  Widget _dropdownRow(
+    bool isDark, {
+    required String label,
+    required IconData icon,
+    required String value,
+    required List<String> options,
+    required Map<String, Color> chipColors,
+    required ValueChanged<String?> onChanged,
+  }) {
     final textColor = isDark ? Colors.white : Colors.black87;
     final subColor = isDark ? Colors.white38 : Colors.black38;
     final chipColor = chipColors[value] ?? Colors.blueAccent;
