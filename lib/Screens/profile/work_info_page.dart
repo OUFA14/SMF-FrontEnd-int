@@ -124,6 +124,9 @@ class _WorkInfoPageState extends State<WorkInfoPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+  return const Scaffold(body: Center(child: CircularProgressIndicator()));
+}
     final themeProvider = context.watch<ThemeProvider>();
     final lang = context.watch<LanguageProvider>();
     final isDark = themeProvider.isDarkMode;
