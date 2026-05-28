@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
+import '../../services/auth_service.dart';
+import '../../services/users_service.dart';
+import '../../models/work_info_odel.dart';
 import '../../theme/app_theme.dart';
 import '../../providers/language_provider.dart';
 import '../../utils/navigation_helper.dart';
@@ -36,6 +38,8 @@ class _WorkInfoPageState extends State<WorkInfoPage> {
 
   final List<String> _employmentOptions = ["Active", "On Leave", "Remote"];
   final List<String> _attendanceOptions = ["Present", "Absent", "On Break"];
+    bool _isLoading = true;
+  WorkInfo? _workInfo;
 
   @override
   void dispose() {
@@ -50,18 +54,71 @@ class _WorkInfoPageState extends State<WorkInfoPage> {
     super.dispose();
   }
 
-  void _toggleEdit() {
+    void _toggleEdit() async {
+    if (_isEditing) {
+      final userId = AuthService.instance.userId;
+      if (userId != null && userId.isNotEmpty) {
+        final updatedWorkInfo = WorkInfo(
+          jobTitle: _jobTitleCtrl.text,
+          department: _departmentCtrl.text,
+          manager: _managerCtrl.text,
+          location: _locationCtrl.text,
+          shift: _shiftCtrl.text,
+          certificates: _certificatesCtrl.text,
+          safetyCourses: _safetyCoursesCtrl.text,
+          equipment: _equipmentCtrl.text,
+          employmentStatus: _employmentStatus,
+          attendanceStatus: _attendanceStatus,
+        );
+
+        try {
+          await UsersService().updateWorkInfo(userId, updatedWorkInfo);
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text("Work information saved successfully ✓"),
+              backgroundColor: Colors.green.shade700,
+            ),
+          );
+        } catch (e) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Error saving work info: $e"),
+              backgroundColor: Colors.red.shade700,
+            ),
+          );
+        }
+      }
+    }
     setState(() => _isEditing = !_isEditing);
-    if (!_isEditing) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text("Work information saved successfully ✓"),
-          backgroundColor: Colors.green.shade700,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      );
+  }
+    Future<void> _loadWorkInfo() async {
+    final userId = AuthService.instance.userId;
+    if (userId == null || userId.isEmpty) {
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    try {
+      final workInfo = await UsersService().getWorkInfo(userId);
+      if (!mounted) return;
+      setState(() {
+        _workInfo = workInfo;
+        _jobTitleCtrl.text = workInfo.jobTitle;
+        _departmentCtrl.text = workInfo.department;
+        _managerCtrl.text = workInfo.manager;
+        _locationCtrl.text = workInfo.location;
+        _shiftCtrl.text = workInfo.shift;
+        _certificatesCtrl.text = workInfo.certificates;
+        _safetyCoursesCtrl.text = workInfo.safetyCourses;
+        _equipmentCtrl.text = workInfo.equipment;
+        _employmentStatus = workInfo.employmentStatus;
+        _attendanceStatus = workInfo.attendanceStatus;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
     }
   }
 
@@ -74,6 +131,11 @@ class _WorkInfoPageState extends State<WorkInfoPage> {
     final cardColor = isDark ? const Color(0xFF111C30) : Colors.white;
     final borderColor =
         isDark ? Colors.white.withValues(alpha: 0.07) : Colors.grey.withValues(alpha: 0.15);
+        if (_isLoading) {
+  return const Scaffold(
+    body: Center(child: CircularProgressIndicator()),
+  );
+}
 
     return WillPopScope(
       onWillPop: () => AppNavigation.handleSystemBack(

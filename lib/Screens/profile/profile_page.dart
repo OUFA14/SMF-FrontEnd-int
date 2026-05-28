@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import '../../models/user_stats.dart';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -46,6 +47,8 @@ class _ProfilePageState extends State<ProfilePage> {
       MockMonitoringData.alerts.map((alert) => alert.zone).toSet().length;
   int _reportsGenerated = _reportsGeneratedCount;
   int _daysActive = 1;
+    UserStats? _userStats;
+  bool _isLoadingStats = true;
   List<_Activity> _recentActivities = const [];
   final List<_ProfileNotification> _notifications = const [];
   final Set<int> _readNotificationIndexes = <int>{};
@@ -64,6 +67,7 @@ class _ProfilePageState extends State<ProfilePage> {
     _loadPreferences();
     _loadProfileStats();
     _loadRecentActivity();
+      _loadUserStats();
   }
 
   Future<void> _loadPreferences() async {
@@ -106,7 +110,19 @@ class _ProfilePageState extends State<ProfilePage> {
     setState(() => _profileDisplayName = prefs.getString(_profileDisplayNameKey));
   }
 
-  Future<void> _loadProfileStats() async {
+    Future<void> _loadProfileStats() async {
+    // لو فيه بيانات من API، استخدمها
+    if (_userStats != null) {
+      setState(() {
+        _alertsHandled = _userStats!.alertsHandled;
+        _zonesMonitored = _userStats!.zonesMonitored;
+        _reportsGenerated = _userStats!.reportsGenerated;
+        _daysActive = _userStats!.daysActive;
+      });
+      return;
+    }
+
+    
     final prefs = await SharedPreferences.getInstance();
     final now = DateTime.now();
     final firstActiveRaw = prefs.getString(_firstActiveAtKey);
@@ -121,9 +137,7 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       final zones = await _zonesService.getZones();
       zonesMonitored = zones.length;
-    } catch (_) {
-      // Keep the local alert-zone fallback when the API is unavailable.
-    }
+    } catch (_) {}
 
     if (!mounted) return;
     setState(() {
@@ -152,6 +166,28 @@ class _ProfilePageState extends State<ProfilePage> {
     } catch (_) {
       if (!mounted) return;
       setState(() => _recentActivities = const []);
+    }
+  }
+    Future<void> _loadUserStats() async {
+    final userId = AuthService.instance.userId;
+    if (userId == null || userId.isEmpty) {
+      setState(() => _isLoadingStats = false);
+      return;
+    }
+
+    try {
+      final stats = await _usersService.getUserStats(userId);
+      if (!mounted) return;
+      setState(() {
+        _userStats = stats;
+        _alertsHandled = stats.alertsHandled;
+        _zonesMonitored = stats.zonesMonitored;
+        _reportsGenerated = stats.reportsGenerated;
+        _daysActive = stats.daysActive;
+        _isLoadingStats = false;
+      });
+    } catch (_) {
+      setState(() => _isLoadingStats = false);
     }
   }
 

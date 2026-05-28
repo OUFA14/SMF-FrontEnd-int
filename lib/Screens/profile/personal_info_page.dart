@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import '../../models/user.dart';
 import '../../theme/app_theme.dart';
 import '../../providers/language_provider.dart';
 import '../../utils/navigation_helper.dart';
@@ -10,6 +10,7 @@ import '../../services/users_service.dart';
 
 class PersonalInfoPage extends StatefulWidget {
   const PersonalInfoPage({super.key});
+  bool _isLoading = true;
 
   @override
   State<PersonalInfoPage> createState() => _PersonalInfoPageState();
@@ -36,32 +37,36 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
   }
 
   Future<void> _loadCurrentUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedName = prefs.getString(_profileDisplayNameKey)?.trim();
-    if (savedName != null && savedName.isNotEmpty) {
-      _fullNameCtrl.text = savedName;
-    }
-
-    final userId = AuthService.instance.userId;
-    if (userId == null || userId.isEmpty) return;
-
-    try {
-      final user = await _usersService.getUser(userId);
-      if (!mounted) return;
-      setState(() {
-        if (savedName == null || savedName.isEmpty) {
-          _fullNameCtrl.text =
-              user.name.trim().isEmpty ? 'Admin User' : user.name;
-        }
-        _emailCtrl.text =
-            user.email.trim().isEmpty ? 'admin@smf.com' : user.email;
-        _phoneCtrl.text = user.phone ?? '';
-        _nationalIdCtrl.text = user.id.trim().isEmpty
-            ? context.read<LanguageProvider>().getText('sessionAccount')
-            : context.read<LanguageProvider>().getText('accountLinked');
-      });
-    } catch (_) {}
+  final prefs = await SharedPreferences.getInstance();
+  final savedName = prefs.getString(_profileDisplayNameKey)?.trim();
+  if (savedName != null && savedName.isNotEmpty) {
+    _fullNameCtrl.text = savedName;
   }
+
+  final userId = AuthService.instance.userId;
+  if (userId == null || userId.isEmpty) {
+    setState(() => _isLoading = false);
+    return;
+  }
+
+  try {
+    final user = await _usersService.getUser(userId);
+    if (!mounted) return;
+    setState(() {
+      if (savedName == null || savedName.isEmpty) {
+        _fullNameCtrl.text = user.name.trim().isEmpty ? '' : user.name;
+      }
+      _emailCtrl.text = user.email.trim().isEmpty ? '' : user.email;
+      _phoneCtrl.text = user.phone ?? '';
+      _nationalIdCtrl.text = user.nationalId ?? '';
+      _dobCtrl.text = user.dateOfBirth ?? '';
+      _selectedGender = user.gender ?? "Prefer not to say";
+      _isLoading = false;
+    });
+  } catch (_) {
+    setState(() => _isLoading = false);
+  }
+}
 
   @override
   void dispose() {
@@ -74,27 +79,51 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
   }
 
   Future<void> _toggleEdit() async {
-    setState(() => _isEditing = !_isEditing);
-    if (!_isEditing) {
-      final lang = context.read<LanguageProvider>();
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(
-        _profileDisplayNameKey,
-        _fullNameCtrl.text.trim(),
+  if (_isEditing) {
+    final userId = AuthService.instance.userId;
+    if (userId == null || userId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User not logged in')),
       );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await _usersService.updateUser(
+        id: userId,
+        username: _fullNameCtrl.text.trim(),
+        email: _emailCtrl.text.trim(),
+        password: null,
+        roles: const {'USER'},
+        phone: _phoneCtrl.text.trim(),
+        nationalId: _nationalIdCtrl.text.trim(),
+        dateOfBirth: _dobCtrl.text.trim(),
+        gender: _selectedGender,
+      );
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_profileDisplayNameKey, _fullNameCtrl.text.trim());
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-                    content: Text(lang.getText('personalInformationSaved')),
+          content: Text(context.read<LanguageProvider>().getText('personalInformationSaved')),
           backgroundColor: Colors.green.shade700,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error saving: $e'), backgroundColor: Colors.red),
+      );
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
-
+  setState(() => _isEditing = !_isEditing);
+}
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
@@ -104,6 +133,11 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
     final cardColor = isDark ? const Color(0xFF111C30) : Colors.white;
     final borderColor =
         isDark ? Colors.white.withValues(alpha: 0.07) : Colors.grey.withValues(alpha: 0.15);
+        if (_isLoading) {
+  return const Scaffold(
+    body: Center(child: CircularProgressIndicator()),
+  );
+}
 
     return WillPopScope(
       onWillPop: () => AppNavigation.handleSystemBack(
