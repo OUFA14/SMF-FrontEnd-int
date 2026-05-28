@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:typed_data';
-
+import '../../services/events_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -36,6 +36,8 @@ enum _DashboardTab {
   users,
   reports,
 }
+  List<EventLog> _recentEvents = [];
+  bool _isLoadingEvents = true;
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -105,6 +107,7 @@ class _DashboardPageState extends State<DashboardPage>
     _loadProfileDisplayName();
     _loadOnlineUserCount();
     _loadSmfDeviceCount();
+    _loadRecentEvents();
   }
 
   Future<void> _loadProfileImage() async {
@@ -169,6 +172,31 @@ class _DashboardPageState extends State<DashboardPage>
         _smfDeviceCount = 0;
         _registeredSmfDeviceCount = 0;
       });
+    }
+  }
+      Future<void> _loadRecentEvents() async {
+    try {
+      final events = await EventsService().getEvents(since: 3600 * 24 * 7);
+      final sortedEvents = [...events]
+        ..sort((a, b) {
+          final aDate = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          final bDate = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          return bDate.compareTo(aDate);
+        });
+      if (mounted) {
+        setState(() {
+          _recentEvents = sortedEvents.take(3).toList();
+          _isLoadingEvents = false;
+        });
+      }
+    } catch (e) {
+      // Fallback to Mock data if API fails
+      if (mounted) {
+        setState(() {
+          _recentEvents = [];
+          _isLoadingEvents = false;
+        });
+      }
     }
   }
 
@@ -2264,10 +2292,12 @@ class _DashboardPageState extends State<DashboardPage>
     );
   }
 
-  Widget _recentAlertsCard({
+    Widget _recentAlertsCard({
     required _DashboardPalette palette,
     required LanguageProvider languageProvider,
   }) {
+    final displayEvents = _isLoadingEvents ? [] : _recentEvents.take(3).toList();
+
     return _glassCard(
       palette: palette,
       child: Column(
@@ -2291,77 +2321,147 @@ class _DashboardPageState extends State<DashboardPage>
             ],
           ),
           const SizedBox(height: 14),
-          Expanded(
-            child: Column(
-              children: _alerts.take(3).toList().asMap().entries.map((entry) {
-                final index = entry.key;
-                final alert = entry.value;
-                return Expanded(
-                  child: Container(
-                    margin: EdgeInsets.only(bottom: index == 2 ? 0 : 12),
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: palette.innerCardBackground,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: palette.innerCardBorder),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.lock_outline_rounded,
-                          color: _severityColor(alert.severity, palette),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                _localizedAlertTitle(alert),
-                                style: TextStyle(
-                                  color: palette.textPrimary,
-                                  fontWeight: FontWeight.w700,
+          if (_isLoadingEvents)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 40),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (displayEvents.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              child: Center(
+                child: Text(
+                  languageProvider.getText('noRecentEvents'),
+                  style: TextStyle(color: palette.textMuted),
+                ),
+              ),
+            )
+          else
+            Expanded(
+              child: Column(
+                children: displayEvents.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final event = entry.value;
+                  final severity = _normalizeSeverity(event.eventType);
+                  final severityColor = _severityColor(severity, palette);
+                  final eventTitle = event.message?.isNotEmpty == true
+                      ? event.message!
+                      : _getEventTitle(event.eventType, languageProvider);
+                  final eventLocation = event.zoneName?.isNotEmpty == true
+                      ? event.zoneName!
+                      : event.macAddress;
+
+                  return Expanded(
+                    child: Container(
+                      margin: EdgeInsets.only(bottom: index == displayEvents.length - 1 ? 0 : 12),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: palette.innerCardBackground,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: palette.innerCardBorder),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            _getEventIcon(event.eventType),
+                            color: severityColor,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  eventTitle,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: palette.textPrimary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                _localizedTimeLabel(alert.timeLabel),
-                                style: TextStyle(color: palette.textMuted),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _severityColor(alert.severity, palette)
-                                .withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text(
-                            _localizedSeverity(alert.severity),
-                            style: TextStyle(
-                              color: _severityColor(alert.severity, palette),
-                              fontWeight: FontWeight.w700,
+                                const SizedBox(height: 6),
+                                Text(
+                                  eventLocation,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(color: palette.textMuted),
+                                ),
+                              ],
                             ),
                           ),
-                        ),
-                      ],
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: severityColor.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              _getEventTypeText(event.eventType, languageProvider),
+                              style: TextStyle(
+                                color: severityColor,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              }).toList(),
+                  );
+                }).toList(),
+              ),
             ),
-          ),
         ],
       ),
     );
   }
 
+  String _getEventTitle(String eventType, LanguageProvider lang) {
+    switch (eventType.toUpperCase()) {
+      case 'SOS_TRIGGERED':
+        return lang.getText('sosAlert');
+      case 'ACCESS_DENIED':
+        return lang.getText('accessDenied');
+      case 'DEVICE_OFFLINE':
+        return lang.getText('deviceOffline');
+      case 'DEVICE_ONLINE':
+        return lang.getText('deviceOnline');
+      default:
+        return eventType.replaceAll('_', ' ').toLowerCase();
+    }
+  }
+
+  String _getEventTypeText(String eventType, LanguageProvider lang) {
+    switch (eventType.toUpperCase()) {
+      case 'SOS_TRIGGERED':
+        return lang.getText('emergency');
+      case 'ACCESS_DENIED':
+        return lang.getText('high');
+      case 'DEVICE_OFFLINE':
+        return lang.getText('warning');
+      default:
+        return lang.getText('info');
+    }
+  }
+
+  IconData _getEventIcon(String eventType) {
+    switch (eventType.toUpperCase()) {
+      case 'SOS_TRIGGERED':
+        return Icons.sos_rounded;
+      case 'ACCESS_DENIED':
+        return Icons.lock_outline_rounded;
+      case 'DEVICE_OFFLINE':
+        return Icons.wifi_off_rounded;
+      case 'DEVICE_ONLINE':
+        return Icons.wifi_rounded;
+      default:
+        return Icons.notifications_active_rounded;
+    }
+  }
   Widget _deviceOverviewCard({
     required _DashboardPalette palette,
     required LanguageProvider languageProvider,
