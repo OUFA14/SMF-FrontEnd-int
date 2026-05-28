@@ -19,4 +19,13 @@ class UserStats {
       daysActive: (json['daysActive'] ?? 0) as int,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'alertsHandled': alertsHandled,
+      'zonesMonitored': zonesMonitored,
+      'reportsGenerated': reportsGenerated,
+      'daysActive': daysActive,
+    };
+  }
 }
