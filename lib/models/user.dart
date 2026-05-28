@@ -28,6 +28,9 @@ class User {
     this.provider,
     this.pictureUrl,
     this.roles = const [],
+     this.nationalId,    
+    this.dateOfBirth,    
+    this.gender,   
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
