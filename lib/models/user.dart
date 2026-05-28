@@ -11,6 +11,9 @@ class User {
   final String? provider;
   final String? pictureUrl;
   final List<String> roles;
+  final String? nationalId;
+  final String? dateOfBirth;
+  final String? gender;
 
   const User({
     required this.id,
