@@ -39,8 +39,7 @@ class _WorkInfoPageState extends State<WorkInfoPage> {
 
   final List<String> _employmentOptions = ["Active", "On Leave", "Remote"];
   final List<String> _attendanceOptions = ["Present", "Absent", "On Break"];
-    bool _isLoading = true;
-  WorkInfo? _workInfo;
+   
   @override
 void initState() {
   super.initState();
@@ -60,6 +59,65 @@ void initState() {
   }
   bool _isLoading = true;
 WorkInfo? _workInfo;
+  Future<void> _loadWorkInfo() async {
+  final userId = AuthService.instance.userId;
+  if (userId == null || userId.isEmpty) {
+    setState(() => _isLoading = false);
+    return;
+  }
+
+  try {
+    final workInfo = await UsersService().getWorkInfo(userId);
+    setState(() {
+      _workInfo = workInfo;
+      _jobTitleCtrl.text = workInfo.jobTitle;
+      _departmentCtrl.text = workInfo.department;
+      _managerCtrl.text = workInfo.manager;
+      _locationCtrl.text = workInfo.location;
+      _shiftCtrl.text = workInfo.shift;
+      _certificatesCtrl.text = workInfo.certificates;
+      _safetyCoursesCtrl.text = workInfo.safetyCourses;
+      _equipmentCtrl.text = workInfo.equipment;
+      _employmentStatus = workInfo.employmentStatus;
+      _attendanceStatus = workInfo.attendanceStatus;
+      _isLoading = false;
+    });
+  } catch (e) {
+    setState(() => _isLoading = false);
+  }
+}
+
+void _toggleEdit() async {
+  if (_isEditing) {
+    final userId = AuthService.instance.userId;
+    if (userId != null && userId.isNotEmpty) {
+      final updatedWorkInfo = WorkInfo(
+        jobTitle: _jobTitleCtrl.text,
+        department: _departmentCtrl.text,
+        manager: _managerCtrl.text,
+        location: _locationCtrl.text,
+        shift: _shiftCtrl.text,
+        certificates: _certificatesCtrl.text,
+        safetyCourses: _safetyCoursesCtrl.text,
+        equipment: _equipmentCtrl.text,
+        employmentStatus: _employmentStatus,
+        attendanceStatus: _attendanceStatus,
+      );
+
+      try {
+        await UsersService().updateWorkInfo(userId, updatedWorkInfo);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Work information saved")),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+  setState(() => _isEditing = !_isEditing);
+}
 
     void _toggleEdit() async {
     if (_isEditing) {
