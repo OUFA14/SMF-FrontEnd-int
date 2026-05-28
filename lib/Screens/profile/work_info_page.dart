@@ -90,7 +90,7 @@ class _WorkInfoPageState extends State<WorkInfoPage> {
           await UsersService().updateWorkInfo(userId, updatedWorkInfo);
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Work information saved successfully ✓")),
+            const SnackBar(content: Text("Work information saved successfully")),
           );
         } catch (e) {
           if (!mounted) return;
@@ -188,8 +188,24 @@ class _WorkInfoPageState extends State<WorkInfoPage> {
                 _sectionHeader(isDark, icon: Icons.toggle_on_outlined, label: lang.isArabic ? "الحالة" : "Status", accent: Colors.orange),
                 const SizedBox(height: 12),
                 _card(cardColor, borderColor, [
-                  _dropdownRow(isDark, label: lang.isArabic ? "حالة التوظيف" : "Employment Status", icon: Icons.work_history_outlined, value: _employmentStatus, options: _employmentOptions, chipColors: {"Active": Colors.green, "On Leave": Colors.orange, "Remote": Colors.blueAccent}, onChanged: (v) => setState(() => _employmentStatus = v!)),
-                  _dropdownRow(isDark, label: lang.isArabic ? "حالة الحضور" : "Attendance Status", icon: Icons.how_to_reg_outlined, value: _attendanceStatus, options: _attendanceOptions, chipColors: {"Present": Colors.green, "Absent": Colors.red, "On Break": Colors.orange}, onChanged: (v) => setState(() => _attendanceStatus = v!)),
+                  _dropdownRow(
+                    isDark,
+                    label: lang.isArabic ? "حالة التوظيف" : "Employment Status",
+                    icon: Icons.work_history_outlined,
+                    value: _employmentStatus,
+                    options: _employmentOptions,
+                    chipColors: {"Active": Colors.green, "On Leave": Colors.orange, "Remote": Colors.blueAccent},
+                    onChanged: (v) => setState(() => _employmentStatus = v!),
+                  ),
+                  _dropdownRow(
+                    isDark,
+                    label: lang.isArabic ? "حالة الحضور" : "Attendance Status",
+                    icon: Icons.how_to_reg_outlined,
+                    value: _attendanceStatus,
+                    options: _attendanceOptions,
+                    chipColors: {"Present": Colors.green, "Absent": Colors.red, "On Break": Colors.orange},
+                    onChanged: (v) => setState(() => _attendanceStatus = v!),
+                  ),
                 ]),
                 const SizedBox(height: 28),
                 if (_isEditing)
