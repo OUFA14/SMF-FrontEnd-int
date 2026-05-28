@@ -85,7 +85,7 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
         email: _emailCtrl.text.trim(),
         password: null,
         roles: const {'USER'},
-        phone: _phoneCtrl.text.trim(),
+        
         nationalId: _nationalIdCtrl.text.trim(),
         dateOfBirth: _dobCtrl.text.trim(),
         gender: _selectedGender,
