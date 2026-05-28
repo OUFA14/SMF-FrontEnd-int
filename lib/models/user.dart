@@ -11,6 +11,9 @@ class User {
   final String? provider;
   final String? pictureUrl;
   final List<String> roles;
+  final String? nationalId;
+  final String? dateOfBirth;
+  final String? gender;
 
   const User({
     required this.id,
@@ -25,6 +28,9 @@ class User {
     this.provider,
     this.pictureUrl,
     this.roles = const [],
+     this.nationalId,    
+    this.dateOfBirth,    
+    this.gender,   
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -48,6 +54,9 @@ class User {
       provider: json['provider']?.toString(),
       pictureUrl: json['pictureUrl']?.toString(),
       roles: parsedRoles,
+      nationalId: json['nationalId']?.toString(),      
+      dateOfBirth: json['dateOfBirth']?.toString(),    
+      gender: json['gender']?.toString(),  
     );
   }
 }

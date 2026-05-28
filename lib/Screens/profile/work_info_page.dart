@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/users_service.dart';
-import '../../models/work_info_odel.dart';
+import '../../models/work_info.dart';
 import '../../theme/app_theme.dart';
 import '../../providers/language_provider.dart';
 import '../../utils/navigation_helper.dart';
@@ -13,7 +13,8 @@ class WorkInfoPage extends StatefulWidget {
   @override
   State<WorkInfoPage> createState() => _WorkInfoPageState();
 }
-
+bool _isLoading = true;
+WorkInfo? _workInfo;
 class _WorkInfoPageState extends State<WorkInfoPage> {
   bool _isEditing = false;
 
@@ -40,7 +41,11 @@ class _WorkInfoPageState extends State<WorkInfoPage> {
   final List<String> _attendanceOptions = ["Present", "Absent", "On Break"];
     bool _isLoading = true;
   WorkInfo? _workInfo;
-
+  @override
+void initState() {
+  super.initState();
+  _loadWorkInfo();
+}
   @override
   void dispose() {
     _jobTitleCtrl.dispose();
@@ -53,6 +58,8 @@ class _WorkInfoPageState extends State<WorkInfoPage> {
     _equipmentCtrl.dispose();
     super.dispose();
   }
+  bool _isLoading = true;
+WorkInfo? _workInfo;
 
     void _toggleEdit() async {
     if (_isEditing) {
@@ -93,37 +100,12 @@ class _WorkInfoPageState extends State<WorkInfoPage> {
     }
     setState(() => _isEditing = !_isEditing);
   }
-    Future<void> _loadWorkInfo() async {
-    final userId = AuthService.instance.userId;
-    if (userId == null || userId.isEmpty) {
-      setState(() => _isLoading = false);
-      return;
-    }
-
-    try {
-      final workInfo = await UsersService().getWorkInfo(userId);
-      if (!mounted) return;
-      setState(() {
-        _workInfo = workInfo;
-        _jobTitleCtrl.text = workInfo.jobTitle;
-        _departmentCtrl.text = workInfo.department;
-        _managerCtrl.text = workInfo.manager;
-        _locationCtrl.text = workInfo.location;
-        _shiftCtrl.text = workInfo.shift;
-        _certificatesCtrl.text = workInfo.certificates;
-        _safetyCoursesCtrl.text = workInfo.safetyCourses;
-        _equipmentCtrl.text = workInfo.equipment;
-        _employmentStatus = workInfo.employmentStatus;
-        _attendanceStatus = workInfo.attendanceStatus;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() => _isLoading = false);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+  return const Scaffold(body: Center(child: CircularProgressIndicator()));
+}
     final themeProvider = context.watch<ThemeProvider>();
     final lang = context.watch<LanguageProvider>();
     final isDark = themeProvider.isDarkMode;

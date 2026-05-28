@@ -1,8 +1,9 @@
-import '../models/work_info_odel.dart';
+import '../models/work_info.dart';
+import '../models/user_stats.dart';
 import '../models/user.dart';
 import 'api_service.dart';
 import 'auth_service.dart';
-import '../models/user_stats.dart'
+
   
   Future<WorkInfo> getWorkInfo(String userId) async {
     final response = await _apiService.get(
