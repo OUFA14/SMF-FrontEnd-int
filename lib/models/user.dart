@@ -54,6 +54,9 @@ class User {
       provider: json['provider']?.toString(),
       pictureUrl: json['pictureUrl']?.toString(),
       roles: parsedRoles,
+      nationalId: json['nationalId']?.toString(),      
+      dateOfBirth: json['dateOfBirth']?.toString(),    
+      gender: json['gender']?.toString(),  
     );
   }
 }
