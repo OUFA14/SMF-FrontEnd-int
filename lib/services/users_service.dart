@@ -1,35 +1,8 @@
-import '../models/work_info.dart';
-import '../models/user_stats.dart';
-import '../models/user.dart';
 import 'api_service.dart';
 import 'auth_service.dart';
-
-  
-  Future<WorkInfo> getWorkInfo(String userId) async {
-    final response = await _apiService.get(
-      '/users/$userId/work-info',
-      headers: await AuthService.instance.authHeaders(),
-    );
-
-    return WorkInfo.fromJson(response.data as Map<String, dynamic>);
-  }
-  Future<UserStats> getUserStats(String userId) async {
-    final response = await _apiService.get(
-      '/users/$userId/stats',
-      headers: await AuthService.instance.authHeaders(),
-    );
-
-    return UserStats.fromJson(response.data as Map<String, dynamic>);
-  }
-
-  Future<void> updateWorkInfo(String userId, WorkInfo workInfo) async {
-    await _apiService.put(
-      '/users/$userId/work-info',
-      headers: await AuthService.instance.authHeaders(),
-      body: workInfo.toJson(),
-    );
-  }
-
+import '../models/user.dart';
+import '../models/work_info.dart';
+import '../models/user_stats.dart';
 
 class UsersService {
   UsersService({ApiService? apiService})
@@ -93,6 +66,14 @@ class UsersService {
     required String email,
     String? password,
     required Set<String> roles,
+    String? phone,
+    String? department,
+    String? location,
+    String? shift,
+    String? manager,
+    String? nationalId,
+    String? dateOfBirth,
+    String? gender,
   }) async {
     final response = await _apiService.put(
       '/users/$id',
@@ -102,6 +83,14 @@ class UsersService {
         'email': email,
         if (password != null) 'password': password,
         'roles': roles.toList(),
+        if (phone != null && phone.isNotEmpty) 'phone': phone,
+        if (department != null && department.isNotEmpty) 'department': department,
+        if (location != null && location.isNotEmpty) 'location': location,
+        if (shift != null && shift.isNotEmpty) 'shift': shift,
+        if (manager != null && manager.isNotEmpty) 'manager': manager,
+        if (nationalId != null && nationalId.isNotEmpty) 'nationalId': nationalId,
+        if (dateOfBirth != null && dateOfBirth.isNotEmpty) 'dateOfBirth': dateOfBirth,
+        if (gender != null && gender.isNotEmpty) 'gender': gender,
       },
     );
 
@@ -113,5 +102,31 @@ class UsersService {
       '/users/$id',
       headers: await AuthService.instance.authHeaders(),
     );
+  }
+
+  // ========== WORK INFO METHODS ==========
+  Future<WorkInfo> getWorkInfo(String userId) async {
+    final response = await _apiService.get(
+      '/users/$userId/work-info',
+      headers: await AuthService.instance.authHeaders(),
+    );
+    return WorkInfo.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<void> updateWorkInfo(String userId, WorkInfo workInfo) async {
+    await _apiService.put(
+      '/users/$userId/work-info',
+      headers: await AuthService.instance.authHeaders(),
+      body: workInfo.toJson(),
+    );
+  }
+
+  // ========== USER STATS METHODS ==========
+  Future<UserStats> getUserStats(String userId) async {
+    final response = await _apiService.get(
+      '/users/$userId/stats',
+      headers: await AuthService.instance.authHeaders(),
+    );
+    return UserStats.fromJson(response.data as Map<String, dynamic>);
   }
 }
