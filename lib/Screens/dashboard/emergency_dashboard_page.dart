@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
 
@@ -12,6 +11,9 @@ import '../../models/emergency_contact.dart';
 import '../../models/emergency_system.dart';
 import '../../theme/app_theme.dart';
 
+// ============================================================================
+// Main Stateful Widget
+// ============================================================================
 class EmergencyDashboardPage extends StatefulWidget {
   const EmergencyDashboardPage({super.key});
 
@@ -23,7 +25,6 @@ class _EmergencyDashboardPageState extends State<EmergencyDashboardPage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _pulseController;
 
-  // Emergency Data
   EmergencyStatus? _emergencyStatus;
   ActiveIncident? _activeIncident;
   List<IncidentFeedItem> _incidentFeed = [];
@@ -83,6 +84,7 @@ class _EmergencyDashboardPageState extends State<EmergencyDashboardPage>
     final palette = _EmergencyPalette(
       Theme.of(context).brightness == Brightness.dark,
     );
+
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -124,6 +126,9 @@ class _EmergencyDashboardPageState extends State<EmergencyDashboardPage>
   }
 }
 
+// ============================================================================
+// Body Widgets (Desktop & Compact)
+// ============================================================================
 class _DesktopEmergencyBody extends StatelessWidget {
   final _EmergencyPalette palette;
   final AnimationController pulseController;
@@ -325,6 +330,9 @@ class _CompactEmergencyBody extends StatelessWidget {
   }
 }
 
+// ============================================================================
+// UI Components
+// ============================================================================
 class _EmergencyBanner extends StatelessWidget {
   final _EmergencyPalette palette;
   final AnimationController pulseController;
@@ -919,6 +927,9 @@ class _SystemStrip extends StatelessWidget {
   }
 }
 
+// ============================================================================
+// Helper Widgets
+// ============================================================================
 class _Panel extends StatelessWidget {
   final _EmergencyPalette palette;
   final String title;
@@ -1268,37 +1279,4 @@ class _MapLegendDot extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 6),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Color(0xFF9DB2D8),
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _MiniButton extends StatelessWidget {
-  final _EmergencyPalette palette;
-  final String label;
-
-  const _MiniButton({required this.palette, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: palette.blue.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(7),
-        border: Border.all(color: palette.blue.withOpacity(0.35)),
-      ),
-      child
+          width:
