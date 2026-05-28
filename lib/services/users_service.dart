@@ -1,6 +1,34 @@
+import '../models/work_info_odel.dart';
 import '../models/user.dart';
 import 'api_service.dart';
 import 'auth_service.dart';
+import '../models/user_stats.dart'
+  
+  Future<WorkInfo> getWorkInfo(String userId) async {
+    final response = await _apiService.get(
+      '/users/$userId/work-info',
+      headers: await AuthService.instance.authHeaders(),
+    );
+
+    return WorkInfo.fromJson(response.data as Map<String, dynamic>);
+  }
+  Future<UserStats> getUserStats(String userId) async {
+    final response = await _apiService.get(
+      '/users/$userId/stats',
+      headers: await AuthService.instance.authHeaders(),
+    );
+
+    return UserStats.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<void> updateWorkInfo(String userId, WorkInfo workInfo) async {
+    await _apiService.put(
+      '/users/$userId/work-info',
+      headers: await AuthService.instance.authHeaders(),
+      body: workInfo.toJson(),
+    );
+  }
+
 
 class UsersService {
   UsersService({ApiService? apiService})
