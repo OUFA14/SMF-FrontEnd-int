@@ -64,11 +64,7 @@ class SMFApp extends StatelessWidget {
             },
           ),
         );
-      },
-    );
-  }
-
-  Route<dynamic> _generateRoute(RouteSettings settings) {
+         Route<dynamic> _generateRoute(RouteSettings settings) {
     final rawName = settings.name ?? '';
     final uri = Uri.tryParse(rawName.startsWith('/') ? rawName : '/$rawName');
     final path = uri?.path.isNotEmpty == true ? uri!.path : '/';
@@ -85,8 +81,7 @@ class SMFApp extends StatelessWidget {
         page = const RegisterPage();
         break;
       case '/dashboard':
-        page = const DashboardPage();
-        break;
+          break;
       case '/announcements':
         page = const AnnouncementsPage();
         break;
