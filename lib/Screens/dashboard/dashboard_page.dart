@@ -38,7 +38,6 @@ enum _DashboardTab {
 }
   List<EventLog> _recentEvents = [];
   bool _isLoadingEvents = true;
-
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
@@ -101,8 +100,7 @@ class _DashboardPageState extends State<DashboardPage>
       vsync: this,
       duration: const Duration(milliseconds: 1700),
     )..repeat(reverse: true);
-
-    _loadCurrentUser();
+     _loadCurrentUser();
     _loadProfileImage();
     _loadProfileDisplayName();
     _loadOnlineUserCount();
@@ -156,13 +154,12 @@ class _DashboardPageState extends State<DashboardPage>
       setState(() => _onlineUserCount = 0);
     }
   }
-
   Future<void> _loadSmfDeviceCount() async {
     try {
-      final devices = await _smfDevicesService.getAllDevices();
+        final devices = await _smfDevicesService.getAllDevices();
       if (!mounted) return;
       setState(() {
-        _smfDeviceCount = devices.length;
+         _smfDeviceCount = devices.length;
         _registeredSmfDeviceCount =
             devices.where((device) => device.isRegistered).length;
       });
@@ -188,7 +185,7 @@ class _DashboardPageState extends State<DashboardPage>
           _recentEvents = sortedEvents.take(3).toList();
           _isLoadingEvents = false;
         });
-      }
+         }
     } catch (e) {
       // Fallback to Mock data if API fails
       if (mounted) {
@@ -202,7 +199,7 @@ class _DashboardPageState extends State<DashboardPage>
 
   @override
   void dispose() {
-    _dashboardHistorySubscription?.cancel();
+     _dashboardHistorySubscription?.cancel();
     _livePulse.dispose();
     _badgePulse.dispose();
     super.dispose();
@@ -261,8 +258,7 @@ class _DashboardPageState extends State<DashboardPage>
         return _DashboardTab.dashboard;
     }
   }
-
-  void _restoreDashboardTabFromHistory(String slug) {
+   void _restoreDashboardTabFromHistory(String slug) {
     if (!mounted) return;
     final tab = _tabFromSlug(slug);
     if (_selectedTab == tab) return;
@@ -766,8 +762,7 @@ class _DashboardPageState extends State<DashboardPage>
           ),
           child: Stack(
             children: [
-              Positioned.fill(
-                child: IgnorePointer(
+               child: IgnorePointer(
                   child: Stack(
                     children: [
                       DecoratedBox(
@@ -778,7 +773,7 @@ class _DashboardPageState extends State<DashboardPage>
                             colors: [palette.glowColor, Colors.transparent],
                           ),
                         ),
-                      ),
+                        ),
                       DecoratedBox(
                         decoration: BoxDecoration(
                           gradient: RadialGradient(
@@ -790,7 +785,7 @@ class _DashboardPageState extends State<DashboardPage>
                             ],
                           ),
                         ),
-                      ),
+                        ),
                     ],
                   ),
                 ),
@@ -811,21 +806,21 @@ class _DashboardPageState extends State<DashboardPage>
                         ],
                       ),
                     ),
-                  ),
+                   ),
                 ),
               ),
               SafeArea(
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (isDesktop)
+                     if (isDesktop)
                       _buildSidebar(
                         context: context,
                         palette: palette,
                         isDark: isDark,
                         languageProvider: languageProvider,
                       ),
-                    Expanded(
+                     Expanded(
                       child: Padding(
                         padding: EdgeInsets.fromLTRB(
                           isDesktop ? 0 : 12,
@@ -868,13 +863,12 @@ class _DashboardPageState extends State<DashboardPage>
                 ),
             ],
           ),
-        ),
+           ),
       ),
       ),
     );
   }
-
-  Widget _buildSidebar({
+   Widget _buildSidebar({
     required BuildContext context,
     required _DashboardPalette palette,
     required bool isDark,
@@ -888,21 +882,7 @@ class _DashboardPageState extends State<DashboardPage>
           role: 'ADMIN',
           roles: ['ADMIN'],
         );
-
-    return Container(
-      width: 104,
-      margin: const EdgeInsets.fromLTRB(16, 16, 8, 16),
-      decoration: BoxDecoration(
-        color: palette.sidebarBackground,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: palette.sidebarBorder),
-        boxShadow: [
-          BoxShadow(
-            color: palette.sidebarShadow,
-            blurRadius: 35,
-            offset: const Offset(8, 0),
-          ),
-        ],
+      ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(28),
@@ -932,7 +912,7 @@ class _DashboardPageState extends State<DashboardPage>
                 ),
               ),
             ),
-            Padding(
+             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
               child: Column(
                 children: [
@@ -1157,8 +1137,7 @@ class _DashboardPageState extends State<DashboardPage>
                   ),
               ],
             ),
-          ),
-        ),
+          ),'  ),
       ),
     );
   }
@@ -1354,7 +1333,203 @@ class _DashboardPageState extends State<DashboardPage>
               ],
             ),
           ),
+            ),
+      ),
+    );
+  }
+
+  Widget _buildTabContent({
+    required BuildContext context,
+    required _DashboardPalette palette,
+    required bool isDark,
+    required bool isDesktop,
+    required bool isTablet,
+    required LanguageProvider languageProvider,
+    required ThemeProvider themeProvider,
+  }) {
+    switch (_selectedTab) {
+      case _DashboardTab.dashboard:
+        return _buildDashboardHome(
+          palette: palette,
+          isDark: isDark,
+          isDesktop: isDesktop,
+          isTablet: isTablet,
+          languageProvider: languageProvider,
+          themeProvider: themeProvider,
         );
+      case _DashboardTab.map:
+        return _pageShell(
+          title: languageProvider.getText('map'),
+          subtitle: languageProvider.getText('mapSubtitleDashboard'),
+          heroIcon: Icons.location_on_rounded,
+          heroAccent: const Color(0xFF7C3AED),
+          child: const MapOverviewPage(),
+          palette: palette,
+        );
+      case _DashboardTab.alerts:
+        return _buildAlertsPage(palette);
+      case _DashboardTab.roles:
+        return const RolesManagementPage();
+      case _DashboardTab.zones:
+        return _pageShell(
+          title: languageProvider.getText('zones'),
+          subtitle: languageProvider.getText('zonesSubtitleDashboard'),
+          heroIcon: Icons.location_city_rounded,
+          heroAccent: palette.goldAccent,
+          child: const ZonesManagementPage(),
+          palette: palette,
+        );
+      case _DashboardTab.smfDevices:
+        return _pageShell(
+          title: languageProvider.getText('smfDevices'),
+          subtitle: languageProvider.getText('smfDevicesSubtitleDashboard'),
+          heroIcon: Icons.memory_rounded,
+          heroAccent: palette.primaryBlue2,
+          child: const SmfDevicesManagementPage(showAppBar: false),
+          palette: palette,
+        );
+      case _DashboardTab.announcements:
+        return const AnnouncementsPage(embedded: true);
+      case _DashboardTab.emergency:
+        return _pageShell(
+          title: languageProvider.getText('emergencyDashboard'),
+          subtitle: languageProvider.getText('emergencySubtitleDashboard'),
+          child: const EmergencyDashboardPage(),
+          palette: palette,
+        );
+      case _DashboardTab.users:
+        return _pageShell(
+          title: languageProvider.getText('users'),
+          subtitle: languageProvider.getText('usersSubtitleDashboard'),
+          heroIcon: Icons.groups_rounded,
+          heroAccent: palette.success,
+          child: const UsersManagementPage(),
+          palette: palette,
+        );
+      case _DashboardTab.reports:
+        return ReportsPage(palette: palette);
+    }
+  }
+
+  Widget _buildDashboardHome({
+    required _DashboardPalette palette,
+    required bool isDark,
+    required bool isDesktop,
+    required bool isTablet,
+    required LanguageProvider languageProvider,
+    required ThemeProvider themeProvider,
+  }) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        const gap = 20.0;
+
+        final topColumns = width >= 760 ? 2 : 1;
+        final topMetricHeight = width >= 760 ? 260.0 : 240.0;
+
+        final bottomColumns = width >= 1280
+            ? 3
+            : width >= 860
+                ? 2
+                : 1;
+
+        return SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.all(width < 560 ? 14 : 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHero(
+                  palette: palette,
+                  isDark: isDark,
+                  isDesktop: isDesktop,
+                  languageProvider: languageProvider,
+                  themeProvider: themeProvider,
+                ),
+                const SizedBox(height: 24),
+                _systemOverviewCard(palette: palette),
+                const SizedBox(height: 24),
+                GridView.builder(
+                  itemCount: 2,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: topColumns,
+                    crossAxisSpacing: gap,
+                    mainAxisSpacing: gap,
+                    mainAxisExtent: topMetricHeight,
+                  ),
+                  physics: const NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  itemBuilder: (context, index) {
+                    final cards = [
+                      _metricCard(
+                        title: languageProvider.getText('onlineUsers'),
+                        value: (_onlineUserCount ?? 0).toString(),
+                        delta: '',
+                        deltaLabel: languageProvider.getText('usersInSystem'),
+                        accent: palette.success,
+                        icon: Icons.groups_rounded,
+                        palette: palette,
+                        onTap: () => _selectDashboardTab(_DashboardTab.users),
+                      ),
+                      _metricCard(
+                        title: languageProvider.getText('devices'),
+                        value: (_smfDeviceCount ?? 0).toString(),
+                        delta: '',
+                        deltaLabel:
+                            languageProvider.getText('smfDevicesRegistered'),
+                        accent: palette.primaryBlue2,
+                        icon: Icons.memory_rounded,
+                        palette: palette,
+                        onTap: () => _selectDashboardTab(
+                          _DashboardTab.smfDevices,
+                        ),
+                      ),
+                    ];
+                    return cards[index];
+                  },
+                ),
+                const SizedBox(height: 20),
+                GridView.count(
+                  crossAxisCount: bottomColumns,
+                  crossAxisSpacing: gap,
+                  mainAxisSpacing: gap,
+                  physics: const NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  childAspectRatio: bottomColumns == 3
+                      ? 0.98
+                      : bottomColumns == 2
+                          ? 0.95
+                          : 0.82,
+                  children: [
+                    _recentAlertsCard(
+                      palette: palette,
+                      languageProvider: languageProvider,
+                    ),
+                    _deviceOverviewCard(
+                      palette: palette,
+                      languageProvider: languageProvider,
+                    ),
+                    _quickActionsCard(
+                      palette: palette,
+                      languageProvider: languageProvider,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Center(
+                  child: Text(
+                    '© 2025 SMF Security Monitoring. All rights reserved.',
+                    style: TextStyle(
+                      color: palette.textMuted,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+           );
       },
     );
   }
@@ -2129,7 +2304,7 @@ class _DashboardPageState extends State<DashboardPage>
           ),
           const Spacer(),
           SizedBox(
-            height: 26,
+           height: 26,
             child: CustomPaint(
               painter: _SparklinePainter(color: accent),
               child: const SizedBox.expand(),
@@ -2607,12 +2782,7 @@ class _DashboardPageState extends State<DashboardPage>
               fontWeight: FontWeight.w800,
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _quickActionsCard({
+          Widget _quickActionsCard({
     required _DashboardPalette palette,
     required LanguageProvider languageProvider,
   }) {
@@ -2628,8 +2798,7 @@ class _DashboardPageState extends State<DashboardPage>
               fontWeight: FontWeight.w800,
               fontSize: 16,
             ),
-          ),
-          const SizedBox(height: 18),
+            const SizedBox(height: 18),
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -2641,7 +2810,7 @@ class _DashboardPageState extends State<DashboardPage>
                   physics: const NeverScrollableScrollPhysics(),
                   childAspectRatio: columns == 2 ? 1.55 : 2.45,
                   children: [
-                    _quickActionTile(
+                  _quickActionTile(
                       label: languageProvider.getText('viewMap'),
                       icon: Icons.location_on_outlined,
                       accent: const Color(0xFF7C3AED),
@@ -2705,7 +2874,7 @@ class _DashboardPageState extends State<DashboardPage>
                   ),
                 ],
               ),
-              child: Icon(icon, color: accent, size: 28),
+                child: Icon(icon, color: accent, size: 28),
             ),
             const SizedBox(height: 12),
             Text(
@@ -2749,7 +2918,7 @@ class _DashboardPageState extends State<DashboardPage>
                 fontWeight: FontWeight.w800,
                 fontSize: titleSize,
               ),
-            ),
+               ),
             const SizedBox(height: 8),
             Text(
               subtitle,
@@ -2760,14 +2929,14 @@ class _DashboardPageState extends State<DashboardPage>
                 fontSize: compact ? 15 : 17,
                 height: 1.35,
               ),
-            ),
+              ),
           ],
         );
         final headerContent = heroIcon == null
             ? Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
+                 Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -2841,8 +3010,7 @@ class _DashboardPageState extends State<DashboardPage>
       },
     );
   }
-
-  Widget _buildAlertsPage(_DashboardPalette palette) {
+   Widget _buildAlertsPage(_DashboardPalette palette) {
     final lang = context.watch<LanguageProvider>();
     final alertsPalette = palette;
     final filteredAlerts = _filteredAlerts();
@@ -2856,7 +3024,7 @@ class _DashboardPageState extends State<DashboardPage>
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final width = constraints.maxWidth;
+       final width = constraints.maxWidth;
         final isWide = width >= 1320;
         final isTablet = width >= 900;
         final statColumns = width >= 1180
@@ -2864,7 +3032,7 @@ class _DashboardPageState extends State<DashboardPage>
             : width >= 760
                 ? 2
                 : 1;
-        final stackHeader = width < 980;
+                final stackHeader = width < 980;
         final stackToolbar = width < 1100;
 
         return SingleChildScrollView(
@@ -3075,7 +3243,6 @@ class _DashboardPageState extends State<DashboardPage>
       },
     );
   }
-
   Widget _alertsHeaderContent(_DashboardPalette palette) {
     final lang = context.read<LanguageProvider>();
     return Row(
@@ -3137,7 +3304,6 @@ class _DashboardPageState extends State<DashboardPage>
       ],
     );
   }
-
   Widget _alertsAddButton(_DashboardPalette palette) {
     final lang = context.read<LanguageProvider>();
     return DecoratedBox(
@@ -3170,8 +3336,7 @@ class _DashboardPageState extends State<DashboardPage>
       ),
     );
   }
-
-  Widget _alertsSearchBar(_DashboardPalette palette) {
+Widget _alertsSearchBar(_DashboardPalette palette) {
     final lang = context.read<LanguageProvider>();
     return Container(
       height: 46,
@@ -3204,7 +3369,6 @@ class _DashboardPageState extends State<DashboardPage>
       ),
     );
   }
-
   Widget _alertStatCard({
     required _DashboardPalette palette,
     required String label,
@@ -3241,7 +3405,7 @@ class _DashboardPageState extends State<DashboardPage>
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
+        Row(
             children: [
               Container(
                 width: 46,
@@ -3271,9 +3435,9 @@ class _DashboardPageState extends State<DashboardPage>
                   ),
                 ),
               ),
-            ],
+               ],
           ),
-          FittedBox(
+           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
             child: Text(
@@ -3362,8 +3526,7 @@ class _DashboardPageState extends State<DashboardPage>
       ),
     );
   }
-
-  Widget _alertsListPanel({
+   Widget _alertsListPanel({
     required _DashboardPalette palette,
     required List<_AlertRecord> alerts,
     required bool compact,
@@ -3377,8 +3540,7 @@ class _DashboardPageState extends State<DashboardPage>
     final pageStart = (currentPage - 1) * _alertsPerPage;
     final pageEnd = (pageStart + _alertsPerPage).clamp(0, totalAlerts);
     final visibleAlerts = alerts.sublist(pageStart, pageEnd);
-
-    return Container(
+     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: palette.cardBackground,
@@ -3393,8 +3555,7 @@ class _DashboardPageState extends State<DashboardPage>
         ],
       ),
       child: Column(
-        children: [
-          if (!compact)
+      if (!compact)
             Padding(
               padding: const EdgeInsets.fromLTRB(4, 0, 4, 14),
               child: Row(
@@ -3414,11 +3575,11 @@ class _DashboardPageState extends State<DashboardPage>
                     child: Text(
                       lang.getText('severity'),
                       style: TextStyle(
-                        color: palette.textMuted,
+                       color: palette.textMuted,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ),
+                    ),
                   Expanded(
                     flex: 16,
                     child: Text(
@@ -3428,7 +3589,7 @@ class _DashboardPageState extends State<DashboardPage>
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ),
+                    ),
                   Expanded(
                     flex: 18,
                     child: Text(
@@ -3438,7 +3599,7 @@ class _DashboardPageState extends State<DashboardPage>
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ),
+                    ),
                   Expanded(
                     flex: 12,
                     child: Text(
@@ -3462,7 +3623,7 @@ class _DashboardPageState extends State<DashboardPage>
                   ),
                 ],
               ),
-            ),
+              ),
           if (alerts.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 40),
@@ -3531,8 +3692,7 @@ class _DashboardPageState extends State<DashboardPage>
       ),
     );
   }
-
-  Widget Function(_AlertRecord) _buildAlertListRowForPanel(
+Widget Function(_AlertRecord) _buildAlertListRowForPanel(
     _DashboardPalette palette,
     bool compact,
   ) {
@@ -3543,8 +3703,7 @@ class _DashboardPageState extends State<DashboardPage>
       final statusColor = _alertStatusColor(alert.status, palette);
       final index = _alerts.indexOf(alert);
       final isSelected = index == _selectedAlertIndex;
-
-      return Padding(
+       return Padding(
         padding: const EdgeInsets.only(bottom: 12),
         child: InkWell(
           onTap: () {
@@ -3581,7 +3740,7 @@ class _DashboardPageState extends State<DashboardPage>
                 ? Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
+                     Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
@@ -3703,7 +3862,7 @@ class _DashboardPageState extends State<DashboardPage>
                           ],
                         ),
                       ),
-                      Expanded(
+                       Expanded(
                         flex: 12,
                         child: _pill(_localizedSeverity(alert.severity), severityColor),
                       ),
@@ -3759,12 +3918,11 @@ class _DashboardPageState extends State<DashboardPage>
                       ),
                     ],
                   ),
-          ),
+                  ),
         ),
       );
     };
   }
-
   Widget _alertMenuButton(_DashboardPalette palette, int index) {
     final lang = context.read<LanguageProvider>();
     return PopupMenuButton<String>(
@@ -3809,8 +3967,7 @@ class _DashboardPageState extends State<DashboardPage>
       ),
     );
   }
-
-  Widget _detailMetaChip({
+   Widget _detailMetaChip({
     required _DashboardPalette palette,
     required IconData icon,
     required String label,
@@ -3825,7 +3982,7 @@ class _DashboardPageState extends State<DashboardPage>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: palette.textMuted, size: 15),
+        Icon(icon, color: palette.textMuted, size: 15),
           const SizedBox(width: 6),
           Text(
             label,
@@ -3834,13 +3991,16 @@ class _DashboardPageState extends State<DashboardPage>
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _alertDetailsPanel({
+            Icon(icon, color: palette.textMuted, size: 15),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              color: palette.textPrimary,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+            Widget _alertDetailsPanel({
     required _DashboardPalette palette,
     required _AlertRecord? alert,
   }) {
@@ -3848,16 +4008,12 @@ class _DashboardPageState extends State<DashboardPage>
     if (alert == null) {
       return const SizedBox.shrink();
     }
-
-    final severityColor = _severityColor(alert.severity, palette);
+      final severityColor = _severityColor(alert.severity, palette);
     final statusColor = _alertStatusColor(alert.status, palette);
     final source = _alertSource(alert);
     final sourceLabel = _localizedSource(source);
-
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: palette.cardBackground,
+    padding: const EdgeInsets.all(18),
+    color: palette.cardBackground,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: palette.cardBorder),
         boxShadow: [
@@ -3871,7 +4027,7 @@ class _DashboardPageState extends State<DashboardPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+        Row(
             children: [
               Text(
                 lang.getText('alertDetails'),
@@ -3913,7 +4069,7 @@ class _DashboardPageState extends State<DashboardPage>
                         severityColor.withValues(alpha: 0.08),
                       ],
                     ),
-                    border: Border.all(color: severityColor.withValues(alpha: 0.5)),
+                     border: Border.all(color: severityColor.withValues(alpha: 0.5)),
                   ),
                   child: Icon(
                     _alertSeverityIcon(alert.severity),
@@ -3933,7 +4089,7 @@ class _DashboardPageState extends State<DashboardPage>
                           fontSize: 17,
                           fontWeight: FontWeight.w800,
                         ),
-                      ),
+                        ),
                       const SizedBox(height: 8),
                       _pill(
                         alert.severity == 'High'
@@ -3955,7 +4111,7 @@ class _DashboardPageState extends State<DashboardPage>
                       ),
                     ],
                   ),
-                ),
+                  ),
               ],
             ),
           ),
@@ -4026,12 +4182,12 @@ class _DashboardPageState extends State<DashboardPage>
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 12),
+            ),
+            const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(
-                child: OutlinedButton.icon(
+         Expanded(
+          child: OutlinedButton.icon(
                   onPressed: () => _updateAlertStatus(alert, 'In Progress'),
                   icon: Icon(Icons.north_east_rounded, color: palette.warning),
                   label: Text(
@@ -4066,13 +4222,12 @@ class _DashboardPageState extends State<DashboardPage>
                   ),
                 ),
               ),
-            ],
+              ],
           ),
-        ],
+           ],
       ),
     );
   }
-
   Widget _detailRow({
     required _DashboardPalette palette,
     required String label,
@@ -4080,16 +4235,16 @@ class _DashboardPageState extends State<DashboardPage>
     Widget? valueWidget,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14),
+    padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
-        border: Border(
+       border: Border(
           bottom: BorderSide(color: palette.innerCardBorder),
         ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
+        SizedBox(
             width: 92,
             child: Text(
               label,
@@ -4099,19 +4254,18 @@ class _DashboardPageState extends State<DashboardPage>
               ),
             ),
           ),
-          Expanded(
-            child: valueWidget ??
+           Expanded(
+           child: valueWidget ??
                 Text(
-                  value ?? '',
+                 value ?? '',
                   style: TextStyle(color: palette.textMuted, height: 1.45),
                 ),
-          ),
+                ),
         ],
       ),
     );
   }
-
-  Widget _pill(String text, Color color) {
+   Widget _pill(String text, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
@@ -4124,7 +4278,6 @@ class _DashboardPageState extends State<DashboardPage>
       ),
     );
   }
-
   Future<void> _showAlertDialog(
     _DashboardPalette palette, {
     int? index,
@@ -4136,7 +4289,6 @@ class _DashboardPageState extends State<DashboardPage>
     String severity = existing?.severity ?? 'Medium';
     String status = existing?.status ?? 'Open';
     final lang = context.read<LanguageProvider>();
-
     final result = await showDialog<_AlertRecord>(
       context: context,
       builder: (context) {
@@ -4145,7 +4297,7 @@ class _DashboardPageState extends State<DashboardPage>
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
-          title: Text(
+           title: Text(
             index == null ? lang.getText('addAlert') : lang.getText('editAlert'),
             style: TextStyle(color: palette.textPrimary),
           ),
@@ -4242,7 +4394,7 @@ class _DashboardPageState extends State<DashboardPage>
                     status: status,
                     timeLabel: existing?.timeLabel ?? lang.getText('justNow'),
                   ),
-                );
+                  );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: palette.primaryBlue,
@@ -4250,8 +4402,7 @@ class _DashboardPageState extends State<DashboardPage>
               ),
               child: Text(index == null ? lang.getText('add') : lang.getText('save')),
             ),
-          ],
-        );
+             );
       },
     );
 
@@ -4309,19 +4460,17 @@ class _DashboardPageState extends State<DashboardPage>
     });
   }
 }
-
 class _SidebarProfileAvatar extends StatelessWidget {
   final String? imageUrl;
   final _DashboardPalette palette;
-
   const _SidebarProfileAvatar({
     required this.imageUrl,
     required this.palette,
-  });
+    });
 
   @override
   Widget build(BuildContext context) {
-    final normalized = imageUrl?.trim();
+  final normalized = imageUrl?.trim();
     if (normalized == null || normalized.isEmpty) {
       return Icon(
         Icons.admin_panel_settings_rounded,
@@ -4338,7 +4487,7 @@ class _SidebarProfileAvatar extends StatelessWidget {
           Icons.admin_panel_settings_rounded,
           color: palette.primaryBlue2,
         ),
-      );
+        );
     }
 
     return Image.network(
@@ -4351,7 +4500,6 @@ class _SidebarProfileAvatar extends StatelessWidget {
     );
   }
 }
-
 Uint8List? _decodeSidebarDataImage(String value) {
   final commaIndex = value.indexOf(',');
   if (!value.startsWith('data:image/') || commaIndex == -1) return null;
@@ -4382,8 +4530,7 @@ class _AlertRecord {
 class _SparklinePainter extends CustomPainter {
   final Color color;
 
-  const _SparklinePainter({required this.color});
-
+const _SparklinePainter({required this.color});
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
@@ -4418,7 +4565,6 @@ class _SparklinePainter extends CustomPainter {
     return oldDelegate.color != color;
   }
 }
-
 class _DashboardPalette {
   final bool isDark;
   final Color pageBackground;
@@ -4462,8 +4608,7 @@ class _DashboardPalette {
   final Color systemShieldEnd;
   final List<Color> heroHorizontalOverlay;
   final List<Color> heroBottomFade;
-
-  const _DashboardPalette({
+const _DashboardPalette({
     required this.isDark,
     required this.pageBackground,
     required this.pageBackgroundEnd,
@@ -4507,8 +4652,7 @@ class _DashboardPalette {
     required this.heroHorizontalOverlay,
     required this.heroBottomFade,
   });
-
-  const _DashboardPalette.dark()
+ const _DashboardPalette.dark()
       : isDark = true,
         pageBackground = const Color(0xFF020B1F),
         pageBackgroundEnd = const Color(0xFF03142D),
@@ -4612,3 +4756,6 @@ class _DashboardPalette {
           Color.fromRGBO(246, 250, 255, 0.96),
         ];
 }
+            
+             
+                    
