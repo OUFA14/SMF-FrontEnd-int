@@ -19,7 +19,6 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _messageController = TextEditingController();
-
   List<_AnnouncementEntry> _announcements = [];
 bool _isLoading = true;
 
@@ -78,9 +77,7 @@ void initState() {
         ),
       );
       _titleController.clear();
-      _messageController.clear();
-      _selectedPriority = _AnnouncementPriority.medium;
-      _scheduleMode = _ScheduleMode.now;
+@@ -122,1022 +84,1052 @@
       _activeFilter = _AnnouncementFilter.all;
     });
   }
@@ -1070,7 +1067,7 @@ _AnnouncementVisual _getVisualByPriority(String priority) {
     required int maxLines,
     int? maxLength,
     ValueChanged<String>? onChanged,
-  }) {
+    }) {
     return TextField(
       controller: controller,
       maxLines: maxLines,
@@ -1133,7 +1130,7 @@ _AnnouncementVisual _getVisualByPriority(String priority) {
                 ]
               : null,
         ),
-        child: Row(
+         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
