@@ -55,11 +55,11 @@ class SMFApp extends StatelessWidget {
               child: child ?? const SizedBox.shrink(),
             ),
             routes: {
-              '/login': (context) =>  LoginPage(),
-              '/register': (context) =>  RegisterPage(),
-              '/dashboard': (context) =>  DashboardPage(),
-              '/announcements': (context) =>  AnnouncementsPage(),
-              '/profile': (context) =>  ProfilePage(),
+              '/login': (context) => LoginPage(),
+              '/register': (context) => RegisterPage(),
+              '/dashboard': (context) => DashboardPage(),
+              '/announcements': (context) => AnnouncementsPage(),
+              '/profile': (context) => ProfilePage(),
             },
           ),
         );
