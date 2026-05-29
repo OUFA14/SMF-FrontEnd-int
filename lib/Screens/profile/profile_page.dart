@@ -300,7 +300,7 @@ class _ProfilePageState extends State<ProfilePage> {
   void _openProfileEditor() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) =>  PersonalInfoPage()),
+      MaterialPageRoute(builder: (_) => PersonalInfoPage()),
     ).then((_) {
       _loadCurrentUser();
       _loadProfileDisplayName();
@@ -895,7 +895,7 @@ class _SettingsColumn extends StatelessWidget {
           color: _ProfileColors.blue,
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => PersonalInfoPage()),
+            MaterialPageRoute(builder: (_) =>PersonalInfoPage()),
           ).then((_) => onProfileChanged()),
         ),
         const SizedBox(height: 14),
