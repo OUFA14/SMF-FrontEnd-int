@@ -8,8 +8,8 @@ import '../../models/emergency_contact.dart';
 import '../../models/emergency_system.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
-
 import '../../theme/app_theme.dart';
+
 class EmergencyDashboardPage extends StatefulWidget {
   const EmergencyDashboardPage({super.key});
 class _EmergencyDashboardPageState extends State<EmergencyDashboardPage>
