@@ -40,7 +40,6 @@ enum _DashboardTab {
   bool _isLoadingEvents = true;
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
-
   @override
   State<DashboardPage> createState() => _DashboardPageState();
 }
@@ -100,14 +99,13 @@ class _DashboardPageState extends State<DashboardPage>
       vsync: this,
       duration: const Duration(milliseconds: 1700),
     )..repeat(reverse: true);
-     _loadCurrentUser();
-    _loadProfileImage();
-    _loadProfileDisplayName();
-    _loadOnlineUserCount();
-    _loadSmfDeviceCount();
-    _loadRecentEvents();
+       _loadCurrentUser();
+     _loadProfileImage();
+     _loadProfileDisplayName();
+     _loadOnlineUserCount();
+     _loadSmfDeviceCount();
+     _loadRecentEvents();
   }
-
   Future<void> _loadProfileImage() async {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
@@ -119,7 +117,6 @@ class _DashboardPageState extends State<DashboardPage>
     if (!mounted) return;
     setState(() => _profileDisplayName = prefs.getString(_profileDisplayNameKey));
   }
-
   Future<void> _loadCurrentUser() async {
     final userId = AuthService.instance.userId;
     if (userId == null || userId.isEmpty) {
@@ -156,10 +153,10 @@ class _DashboardPageState extends State<DashboardPage>
   }
   Future<void> _loadSmfDeviceCount() async {
     try {
-        final devices = await _smfDevicesService.getAllDevices();
+          final devices = await _smfDevicesService.getAllDevices();
       if (!mounted) return;
       setState(() {
-         _smfDeviceCount = devices.length;
+           _smfDeviceCount = devices.length;
         _registeredSmfDeviceCount =
             devices.where((device) => device.isRegistered).length;
       });
@@ -193,13 +190,13 @@ class _DashboardPageState extends State<DashboardPage>
           _recentEvents = [];
           _isLoadingEvents = false;
         });
-      }
-    }
-  }
+        }
+     }
+   }
 
   @override
   void dispose() {
-     _dashboardHistorySubscription?.cancel();
+      _dashboardHistorySubscription?.cancel();
     _livePulse.dispose();
     _badgePulse.dispose();
     super.dispose();
@@ -258,7 +255,7 @@ class _DashboardPageState extends State<DashboardPage>
         return _DashboardTab.dashboard;
     }
   }
-   void _restoreDashboardTabFromHistory(String slug) {
+    void _restoreDashboardTabFromHistory(String slug) {
     if (!mounted) return;
     final tab = _tabFromSlug(slug);
     if (_selectedTab == tab) return;
@@ -773,7 +770,7 @@ class _DashboardPageState extends State<DashboardPage>
                             colors: [palette.glowColor, Colors.transparent],
                           ),
                         ),
-                        ),
+                         ),
                       DecoratedBox(
                         decoration: BoxDecoration(
                           gradient: RadialGradient(
@@ -785,7 +782,7 @@ class _DashboardPageState extends State<DashboardPage>
                             ],
                           ),
                         ),
-                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -813,18 +810,18 @@ class _DashboardPageState extends State<DashboardPage>
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                     if (isDesktop)
+                         if (isDesktop)
                       _buildSidebar(
                         context: context,
                         palette: palette,
                         isDark: isDark,
                         languageProvider: languageProvider,
                       ),
-                     Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.fromLTRB(
-                          isDesktop ? 0 : 12,
-                          isDesktop ? 12 : 68,
+                       Expanded(
+                        child: Padding(
+                           padding: EdgeInsets.fromLTRB(
+                           isDesktop ? 0 : 12,
+                           isDesktop ? 12 : 68,
                           12,
                           12,
                         ),
@@ -861,14 +858,14 @@ class _DashboardPageState extends State<DashboardPage>
                     ),
                   ),
                 ),
-            ],
-          ),
+             ],
            ),
-      ),
-      ),
-    );
+         ),
+       ),
+     ),
+   );
   }
-   Widget _buildSidebar({
+    Widget _buildSidebar({
     required BuildContext context,
     required _DashboardPalette palette,
     required bool isDark,
@@ -888,7 +885,6 @@ class _DashboardPageState extends State<DashboardPage>
         borderRadius: BorderRadius.circular(28),
         child: Stack(
           children: [
-            Positioned.fill(
               child: IgnorePointer(
                 child: Align(
                   alignment: Alignment.bottomCenter,
@@ -1339,6 +1335,201 @@ class _DashboardPageState extends State<DashboardPage>
   }
 
   Widget _buildTabContent({
+    required BuildContext context,
+    required _DashboardPalette palette,
+    required bool isDark,
+    required bool isDesktop,
+    required bool isTablet,
+    required LanguageProvider languageProvider,
+    required ThemeProvider themeProvider,
+  }) {
+    switch (_selectedTab) {
+      case _DashboardTab.dashboard:
+        return _buildDashboardHome(
+          palette: palette,
+          isDark: isDark,
+          isDesktop: isDesktop,
+          isTablet: isTablet,
+          languageProvider: languageProvider,
+          themeProvider: themeProvider,
+        );
+      case _DashboardTab.map:
+        return _pageShell(
+          title: languageProvider.getText('map'),
+          subtitle: languageProvider.getText('mapSubtitleDashboard'),
+          heroIcon: Icons.location_on_rounded,
+          heroAccent: const Color(0xFF7C3AED),
+          child: const MapOverviewPage(),
+          palette: palette,
+        );
+      case _DashboardTab.alerts:
+        return _buildAlertsPage(palette);
+      case _DashboardTab.roles:
+        return const RolesManagementPage();
+      case _DashboardTab.zones:
+        return _pageShell(
+          title: languageProvider.getText('zones'),
+          subtitle: languageProvider.getText('zonesSubtitleDashboard'),
+          heroIcon: Icons.location_city_rounded,
+          heroAccent: palette.goldAccent,
+          child: const ZonesManagementPage(),
+          palette: palette,
+        );
+      case _DashboardTab.smfDevices:
+        return _pageShell(
+          title: languageProvider.getText('smfDevices'),
+          subtitle: languageProvider.getText('smfDevicesSubtitleDashboard'),
+          heroIcon: Icons.memory_rounded,
+          heroAccent: palette.primaryBlue2,
+          child: const SmfDevicesManagementPage(showAppBar: false),
+          palette: palette,
+        );
+      case _DashboardTab.announcements:
+        return const AnnouncementsPage(embedded: true);
+      case _DashboardTab.emergency:
+        return _pageShell(
+          title: languageProvider.getText('emergencyDashboard'),
+          subtitle: languageProvider.getText('emergencySubtitleDashboard'),
+          child: const EmergencyDashboardPage(),
+          palette: palette,
+        );
+      case _DashboardTab.users:
+        return _pageShell(
+          title: languageProvider.getText('users'),
+          subtitle: languageProvider.getText('usersSubtitleDashboard'),
+          heroIcon: Icons.groups_rounded,
+          heroAccent: palette.success,
+          child: const UsersManagementPage(),
+          palette: palette,
+        );
+      case _DashboardTab.reports:
+        return ReportsPage(palette: palette);
+    }
+  }
+
+  Widget _buildDashboardHome({
+    required _DashboardPalette palette,
+    required bool isDark,
+    required bool isDesktop,
+    required bool isTablet,
+    required LanguageProvider languageProvider,
+    required ThemeProvider themeProvider,
+  }) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        const gap = 20.0;
+
+        final topColumns = width >= 760 ? 2 : 1;
+        final topMetricHeight = width >= 760 ? 260.0 : 240.0;
+
+        final bottomColumns = width >= 1280
+            ? 3
+            : width >= 860
+                ? 2
+                : 1;
+
+        return SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.all(width < 560 ? 14 : 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHero(
+                  palette: palette,
+                  isDark: isDark,
+                  isDesktop: isDesktop,
+                  languageProvider: languageProvider,
+                  themeProvider: themeProvider,
+                ),
+                const SizedBox(height: 24),
+                _systemOverviewCard(palette: palette),
+                const SizedBox(height: 24),
+                GridView.builder(
+                  itemCount: 2,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: topColumns,
+                    crossAxisSpacing: gap,
+                    mainAxisSpacing: gap,
+                    mainAxisExtent: topMetricHeight,
+                  ),
+                  physics: const NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  itemBuilder: (context, index) {
+                    final cards = [
+                      _metricCard(
+                        title: languageProvider.getText('onlineUsers'),
+                        value: (_onlineUserCount ?? 0).toString(),
+                        delta: '',
+                        deltaLabel: languageProvider.getText('usersInSystem'),
+                        accent: palette.success,
+                        icon: Icons.groups_rounded,
+                        palette: palette,
+                        onTap: () => _selectDashboardTab(_DashboardTab.users),
+                      ),
+                      _metricCard(
+                        title: languageProvider.getText('devices'),
+                        value: (_smfDeviceCount ?? 0).toString(),
+                        delta: '',
+                        deltaLabel:
+                            languageProvider.getText('smfDevicesRegistered'),
+                        accent: palette.primaryBlue2,
+                        icon: Icons.memory_rounded,
+                        palette: palette,
+                        onTap: () => _selectDashboardTab(
+                          _DashboardTab.smfDevices,
+                        ),
+                      ),
+                    ];
+                    return cards[index];
+                  },
+                ),
+                const SizedBox(height: 20),
+                GridView.count(
+                  crossAxisCount: bottomColumns,
+                  crossAxisSpacing: gap,
+                  mainAxisSpacing: gap,
+                  physics: const NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  childAspectRatio: bottomColumns == 3
+                      ? 0.98
+                      : bottomColumns == 2
+                          ? 0.95
+                          : 0.82,
+                  children: [
+                    _recentAlertsCard(
+                      palette: palette,
+                      languageProvider: languageProvider,
+                    ),
+                    _deviceOverviewCard(
+                      palette: palette,
+                      languageProvider: languageProvider,
+                    ),
+                    _quickActionsCard(
+                      palette: palette,
+                      languageProvider: languageProvider,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Center(
+                  child: Text(
+                    '© 2025 SMF Security Monitoring. All rights reserved.',
+                    style: TextStyle(
+                      color: palette.textMuted,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+    Widget _buildTabContent({
     required BuildContext context,
     required _DashboardPalette palette,
     required bool isDark,
@@ -2304,7 +2495,7 @@ class _DashboardPageState extends State<DashboardPage>
           ),
           const Spacer(),
           SizedBox(
-           height: 26,
+            height: 26,
             child: CustomPaint(
               painter: _SparklinePainter(color: accent),
               child: const SizedBox.expand(),
@@ -2782,7 +2973,7 @@ class _DashboardPageState extends State<DashboardPage>
               fontWeight: FontWeight.w800,
             ),
           ),
-          Widget _quickActionsCard({
+            Widget _quickActionsCard({
     required _DashboardPalette palette,
     required LanguageProvider languageProvider,
   }) {
@@ -2798,7 +2989,7 @@ class _DashboardPageState extends State<DashboardPage>
               fontWeight: FontWeight.w800,
               fontSize: 16,
             ),
-            const SizedBox(height: 18),
+             const SizedBox(height: 18),
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -2810,7 +3001,7 @@ class _DashboardPageState extends State<DashboardPage>
                   physics: const NeverScrollableScrollPhysics(),
                   childAspectRatio: columns == 2 ? 1.55 : 2.45,
                   children: [
-                  _quickActionTile(
+                    _quickActionTile(
                       label: languageProvider.getText('viewMap'),
                       icon: Icons.location_on_outlined,
                       accent: const Color(0xFF7C3AED),
