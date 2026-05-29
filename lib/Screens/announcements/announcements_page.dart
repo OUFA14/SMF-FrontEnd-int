@@ -77,7 +77,6 @@ void initState() {
         ),
       );
       _titleController.clear();
-@@ -122,1022 +84,1052 @@
       _activeFilter = _AnnouncementFilter.all;
     });
   }
