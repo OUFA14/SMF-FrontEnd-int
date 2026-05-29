@@ -20,56 +20,18 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _messageController = TextEditingController();
 
-  final List<_AnnouncementEntry> _announcements = [
-    _AnnouncementEntry(
-      model: AnnouncementModel(
-        title: 'Security Update Available',
-        message: 'System firmware v2.4.1 is ready for deployment',
-        priority: 'Medium',
-        sender: 'System',
-        timestamp: DateTime.now().subtract(const Duration(minutes: 2)),
-      ),
-      scheduled: false,
-      visual: _AnnouncementVisual.update,
-    ),
-    _AnnouncementEntry(
-      model: AnnouncementModel(
-        title: 'Worker #21 entered Zone A',
-        message: 'Location updated • All systems normal',
-        priority: 'Info',
-        sender: 'Tracker',
-        timestamp: DateTime.now().subtract(const Duration(minutes: 8)),
-      ),
-      scheduled: false,
-      visual: _AnnouncementVisual.worker,
-    ),
-    _AnnouncementEntry(
-      model: AnnouncementModel(
-        title: 'SOS button pressed',
-        message: 'Worker #15 • Immediate attention required',
-        priority: 'High',
-        sender: 'Emergency',
-        timestamp: DateTime.now().subtract(const Duration(minutes: 9)),
-      ),
-      scheduled: false,
-      visual: _AnnouncementVisual.sos,
-    ),
-    _AnnouncementEntry(
-      model: AnnouncementModel(
-        title: 'Device #45 connected',
-        message: 'New device synced successfully',
-        priority: 'Info',
-        sender: 'Devices',
-        timestamp: DateTime.now().subtract(const Duration(minutes: 12)),
-      ),
-      scheduled: true,
-      visual: _AnnouncementVisual.device,
-    ),
-  ];
+  List<_AnnouncementEntry> _announcements = [];
+bool _isLoading = true;
 
   _AnnouncementFilter _activeFilter = _AnnouncementFilter.all;
   _AnnouncementPriority _selectedPriority = _AnnouncementPriority.medium;
   _ScheduleMode _scheduleMode = _ScheduleMode.now;
+
+  @override
+void initState() {
+  super.initState();
+  _loadAnnouncements();
+}
 
   @override
   void dispose() {
@@ -122,6 +84,33 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
       _activeFilter = _AnnouncementFilter.all;
     });
   }
+  Future<void> _loadAnnouncements() async {
+  setState(() => _isLoading = true);
+  try {
+    final announcements = await AnnouncementsService().getAnnouncements();
+    setState(() {
+      _announcements = announcements.map((item) => _AnnouncementEntry(
+        model: item,
+        scheduled: false,
+        visual: _getVisualByPriority(item.priority),
+      )).toList();
+      _isLoading = false;
+    });
+  } catch (e) {
+    setState(() => _isLoading = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Failed to load announcements: $e')),
+    );
+  }
+}
+
+_AnnouncementVisual _getVisualByPriority(String priority) {
+  switch (priority.toLowerCase()) {
+    case 'high': return _AnnouncementVisual.sos;
+    case 'medium': return _AnnouncementVisual.update;
+    default: return _AnnouncementVisual.worker;
+  }
+}
 
   Future<void> _openAnnouncementActions(_AnnouncementEntry entry) async {
     final lang = context.read<LanguageProvider>();
@@ -739,6 +728,9 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
   }
 
   Widget _announcementsListPanel(_AnnouncementsPalette palette) {
+    if (_isLoading) {
+    return const Center(child: CircularProgressIndicator());
+  }
     return _panel(
       palette: palette,
       child: Column(
