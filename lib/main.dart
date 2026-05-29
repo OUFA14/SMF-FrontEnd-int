@@ -81,7 +81,8 @@ class SMFApp extends StatelessWidget {
         page = const RegisterPage();
         break;
       case '/dashboard':
-          break;
+         page = const DashboardPage();
+        break;
       case '/announcements':
         page = const AnnouncementsPage();
         break;
